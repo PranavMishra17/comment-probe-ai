@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Comments Analysis System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1em;
+            transition: all 0.3s;
+            color: #495057;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input[type="text"], input[type="file"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sessions-list {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .session-card {
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .session-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .session-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .session-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .video-result {
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .video-result h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .metric {
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #6c757d;
+            display: block;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .topics-list, .questions-list {
+            margin-top: 15px;
+        }
+
+        .topic-item, .question-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        .categorize-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouTube Comments Analysis</h1>
+            <p>Analyze comments with AI-powered insights</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('analyze')">Analyze</button>
+            <button class="tab" onclick="showTab('sessions')">Sessions</button>
+            <button class="tab" onclick="showTab('categorize')">Categorize Comment</button>
+        </div>
+
+        <!-- Analyze Tab -->
+        <div id="analyze" class="tab-content active">
+            <h2>Analyze YouTube Comments</h2>
+            <form id="analyzeForm">
+                <div class="form-group">
+                    <label for="csvPath">CSV File Path</label>
+                    <input type="text" id="csvPath" placeholder="e.g., dataset.csv" required>
+                    <small style="color: #6c757d;">Enter the path to your CSV file (relative or absolute)</small>
+                </div>
+                <button type="submit" id="analyzeBtn">Start Analysis</button>
+            </form>
+            <div id="analyzeStatus" class="status"></div>
+            <div id="analyzeLoading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing comments... This may take several minutes.</p>
+            </div>
+        </div>
+
+        <!-- Sessions Tab -->
+        <div id="sessions" class="tab-content">
+            <h2>Analysis Sessions</h2>
+            <button onclick="loadSessions()" style="margin-bottom: 20px;">Refresh Sessions</button>
+            <div id="sessionsList" class="sessions-list"></div>
+            <div id="resultsView" class="results-container"></div>
+        </div>
+
+        <!-- Categorize Tab -->
+        <div id="categorize" class="tab-content">
+            <h2>Categorize New Comment</h2>
+            <p style="margin-bottom: 20px; color: #6c757d;">
+                Enter a comment to categorize it using an existing analysis session
+            </p>
+            <form id="categorizeForm">
+                <div class="form-group">
+                    <label for="sessionId">Session ID</label>
+                    <input type="text" id="sessionId" placeholder="e.g., 20241110_143215_892341" required>
+                    <small style="color: #6c757d;">Use a session ID from the Sessions tab</small>
+                </div>
+                <div class="form-group">
+                    <label for="newComment">Comment Text</label>
+                    <textarea id="newComment" placeholder="Enter the comment you want to categorize..." required></textarea>
+                </div>
+                <button type="submit" id="categorizeBtn">Categorize Comment</button>
+            </form>
+            <div id="categorizeStatus" class="status"></div>
+            <div id="categorizeResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'sessions') {
+                loadSessions();
+            }
+        }
+
+        // Analyze form submission
+        document.getElementById('analyzeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const csvPath = document.getElementById('csvPath').value;
+            const statusDiv = document.getElementById('analyzeStatus');
+            const loadingDiv = document.getElementById('analyzeLoading');
+            const btn = document.getElementById('analyzeBtn');
+
+            btn.disabled = true;
+            loadingDiv.style.display = 'block';
+            statusDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ csv_path: csvPath })
+                });
+
+                const data = await response.json();
+
+                loadingDiv.style.display = 'none';
+                statusDiv.style.display = 'block';
+
+                if (response.ok) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = `
+                        <h3>Analysis Complete!</h3>
+                        <p><strong>Run ID:</strong> ${data.run_id}</p>
+                        <p>${data.message}</p>
+                        <button onclick="viewResults('${data.run_id}')">View Results</button>
+                    `;
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Load sessions
+        async function loadSessions() {
+            const listDiv = document.getElementById('sessionsList');
+            listDiv.innerHTML = '<p>Loading sessions...</p>';
+
+            try {
+                const response = await fetch('/runs');
+                const data = await response.json();
+
+                if (data.runs && data.runs.length > 0) {
+                    listDiv.innerHTML = '';
+                    data.runs.forEach(runId => {
+                        const card = document.createElement('div');
+                        card.className = 'session-card';
+                        card.onclick = () => viewResults(runId);
+                        card.innerHTML = `
+                            <h3>Session ${runId}</h3>
+                            <div class="session-meta">
+                                <span>Click to view results</span>
+                            </div>
+                        `;
+                        listDiv.appendChild(card);
+                    });
+                } else {
+                    listDiv.innerHTML = '<p>No analysis sessions found. Run an analysis first!</p>';
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<p class="error">Error loading sessions: ${error.message}</p>`;
+            }
+        }
+
+        // View results
+        async function viewResults(runId) {
+            const resultsDiv = document.getElementById('resultsView');
+            resultsDiv.innerHTML = '<p>Loading results...</p>';
+
+            try {
+                const response = await fetch(`/results/${runId}`);
+                const data = await response.json();
+
+                let html = `<h2>Results for Session ${runId}</h2>`;
+                html += `<div class="session-meta">
+                    <span><strong>Videos:</strong> ${data.metadata.videos_analyzed}</span>
+                    <span><strong>Comments:</strong> ${data.metadata.total_comments}</span>
+                    <span><strong>Duration:</strong> ${data.metadata.processing_time_seconds}s</span>
+                </div>`;
+
+                data.videos.forEach(video => {
+                    html += `<div class="video-result">
+                        <h3>${video.title}</h3>
+                        <p><strong>Comments:</strong> ${video.comment_count}</p>
+
+                        <div class="metric">
+                            <span class="metric-label">Sentiment</span>
+                            <span class="metric-value">${(video.analytics.sentiment.overall_score * 100).toFixed(0)}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Positive</span>
+                            <span class="metric-value">${video.analytics.sentiment.distribution.positive}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Neutral</span>
+                            <span class="metric-value">${video.analytics.sentiment.distribution.neutral}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Negative</span>
+                            <span class="metric-value">${video.analytics.sentiment.distribution.negative}</span>
+                        </div>
+
+                        <h4>Top Topics</h4>
+                        <div class="topics-list">
+                            ${video.analytics.topics.map(topic => `
+                                <div class="topic-item">
+                                    <strong>${topic.topic_name}</strong> (${topic.comment_count} comments)
+                                    <br><small>${topic.keywords.join(', ')}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <h4>Top Questions</h4>
+                        <div class="questions-list">
+                            ${video.analytics.questions.map(q => `
+                                <div class="question-item">
+                                    ${q.question_text}
+                                    <br><small>Category: ${q.category} | Engagement: ${q.engagement_score}</small>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                });
+
+                resultsDiv.innerHTML = html;
+                resultsDiv.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Error loading results: ${error.message}</p>`;
+            }
+        }
+
+        // Categorize form submission
+        document.getElementById('categorizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const sessionId = document.getElementById('sessionId').value;
+            const comment = document.getElementById('newComment').value;
+            const statusDiv = document.getElementById('categorizeStatus');
+            const resultDiv = document.getElementById('categorizeResult');
+            const btn = document.getElementById('categorizeBtn');
+
+            btn.disabled = true;
+            statusDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/categorize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        comment: comment
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="categorize-result">
+                            <h3>Categorization Result</h3>
+                            <p><strong>Sentiment:</strong> ${(data.sentiment * 100).toFixed(0)}%</p>
+                            <p><strong>Most Similar Topic:</strong> ${data.similar_topic}</p>
+                            <p><strong>Similarity Score:</strong> ${(data.similarity_score * 100).toFixed(1)}%</p>
+                            <p><strong>Category:</strong> ${data.category}</p>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.style.display = 'block';
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                }
+            } catch (error) {
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Load sessions on page load
+        window.addEventListener('load', () => {
+            // Check health
+            fetch('/health')
+                .then(r => r.json())
+                .then(data => console.log('System status:', data.status))
+                .catch(e => console.error('Health check failed:', e));
+        });
+    </script>
+</body>
+</html>
