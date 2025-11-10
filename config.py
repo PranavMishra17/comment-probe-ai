@@ -36,8 +36,8 @@ class Config:
     TOKENS_PER_MINUTE: int = int(os.getenv('TOKENS_PER_MINUTE', '150000'))
 
     # Model Configuration
-    COMPLETION_MODEL: str = os.getenv('COMPLETION_MODEL', 'gpt-4-turbo')
-    FAST_COMPLETION_MODEL: str = os.getenv('FAST_COMPLETION_MODEL', 'gpt-3.5-turbo')
+    COMPLETION_MODEL: str = os.getenv('COMPLETION_MODEL', 'gpt-4o')
+    FAST_COMPLETION_MODEL: str = os.getenv('FAST_COMPLETION_MODEL', 'gpt-4o-mini')
     EMBEDDING_MODEL: str = os.getenv('EMBEDDING_MODEL', 'text-embedding-3-small')
     COMPLETION_TEMPERATURE: float = float(os.getenv('COMPLETION_TEMPERATURE', '0.7'))
     COMPLETION_MAX_TOKENS: int = int(os.getenv('COMPLETION_MAX_TOKENS', '1000'))

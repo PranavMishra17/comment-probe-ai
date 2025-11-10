@@ -39,10 +39,10 @@ class OpenAIClient:
     Wrapper for OpenAI API with error handling and retry logic.
     """
 
-    # Cost per 1K tokens (as of Jan 2025)
+    # Cost per 1K tokens (as of Nov 2025)
     COSTS = {
-        'gpt-4-turbo': {'prompt': 0.01, 'completion': 0.03},
-        'gpt-3.5-turbo': {'prompt': 0.0005, 'completion': 0.0015},
+        'gpt-4o': {'prompt': 0.005, 'completion': 0.015},
+        'gpt-4o-mini': {'prompt': 0.00015, 'completion': 0.0006},
         'text-embedding-3-small': {'embedding': 0.00002}
     }
 

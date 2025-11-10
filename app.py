@@ -56,6 +56,31 @@ def index():
         HTML page
     """
     return render_template('index.html')
+  
+  
+def root():
+    """
+    Root endpoint providing API documentation.
+
+    Returns:
+        JSON with available endpoints
+    """
+    return jsonify({
+        "service": "YouTube Comments Analysis System",
+        "version": "1.0",
+        "endpoints": {
+            "GET /": "API documentation (this endpoint)",
+            "GET /health": "Health check",
+            "POST /analyze": "Start analysis of a CSV file",
+            "GET /results/<run_id>": "Retrieve results for a run",
+            "GET /runs": "List all available runs"
+        },
+        "example_request": {
+            "method": "POST",
+            "path": "/analyze",
+            "body": {"csv_path": "/path/to/comments.csv"}
+        }
+    })
 
 
 @app.route('/health', methods=['GET'])
