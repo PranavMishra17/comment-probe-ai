@@ -22,6 +22,7 @@ from src.analytics.sentiment_analyzer import SentimentAnalyzer
 from src.analytics.topic_extractor import TopicExtractor
 from src.analytics.question_finder import QuestionFinder
 from src.output.output_manager import OutputManager
+from src.core.session_manager import SessionManager
 from src.utils.cache_manager import CacheManager
 from src.utils.rate_limiter import RateLimiter
 from config import Config
@@ -70,6 +71,7 @@ class Orchestrator:
 
         # Initialize output
         self.output_manager = OutputManager(config.OUTPUT_BASE_DIR)
+        self.session_manager = SessionManager(config.OUTPUT_BASE_DIR)
 
         logger.info("[Orchestrator] Initialization complete")
 
@@ -124,7 +126,14 @@ class Orchestrator:
             metadata.videos_processed = len(videos)
             metadata.total_comments = sum(len(v.comments) for v in videos)
 
-            self._generate_outputs(videos, analytics, metadata)
+            run_dir = self._generate_outputs(videos, analytics, metadata)
+
+            # Save session for reuse
+            try:
+                self.session_manager.save_session(metadata.run_id, videos, analytics, metadata)
+                logger.info(f"[Orchestrator] Session saved for reuse")
+            except Exception as e:
+                logger.warning(f"[Orchestrator] Could not save session: {e}")
 
             logger.info(f"[Orchestrator] Analysis complete - Run ID: {metadata.run_id}")
             return metadata.run_id
