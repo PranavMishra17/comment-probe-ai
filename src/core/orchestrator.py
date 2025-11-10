@@ -93,9 +93,14 @@ class Orchestrator:
         logger.info(f"[Orchestrator] Starting analysis of {csv_path}")
         start_time = datetime.utcnow()
 
-        # Create metadata
+        # Create run directory and get run_id early
+        run_dir = self.output_manager.create_run_directory()
+        run_id = self.output_manager.get_run_id()
+        logger.info(f"[Orchestrator] Run ID: {run_id}")
+
+        # Create metadata with proper run_id
         metadata = ProcessingMetadata(
-            run_id=self.output_manager.get_run_id(),
+            run_id=run_id,
             start_time=start_time,
             input_file=csv_path
         )
@@ -126,7 +131,7 @@ class Orchestrator:
             metadata.videos_processed = len(videos)
             metadata.total_comments = sum(len(v.comments) for v in videos)
 
-            run_dir = self._generate_outputs(videos, analytics, metadata)
+            self._save_outputs(videos, analytics, metadata)
 
             # Save session for reuse
             try:
@@ -266,20 +271,16 @@ class Orchestrator:
         logger.info("[Orchestrator] Phase 6 complete")
         return analytics
 
-    def _generate_outputs(
+    def _save_outputs(
         self,
         videos: List[Video],
         analytics: Dict[str, AnalyticsResult],
         metadata: ProcessingMetadata
-    ) -> str:
+    ) -> None:
         """Phase 7: Generate all outputs."""
         logger.info("[Orchestrator] Phase 7: Generating outputs")
 
-        # Create run directory
-        run_dir = self.output_manager.create_run_directory()
-
-        # Save results
+        # Save results (run_dir already created at start)
         self.output_manager.save_results(videos, analytics, metadata)
 
-        logger.info(f"[Orchestrator] Phase 7 complete - Output in {run_dir}")
-        return run_dir
+        logger.info(f"[Orchestrator] Phase 7 complete - Output in {self.output_manager.run_dir}")
