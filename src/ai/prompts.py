@@ -52,22 +52,17 @@ Context: {context}
 Comment: {comment}
 
 Respond with ONLY a number between 0 and 1, where:
-- 0 = Not relevant at all
-- 0.5 = Somewhat relevant
-- 1 = Highly relevant
 
 Score:"""
 
-    SENTIMENT_ANALYSIS_PROMPT = """Analyze the sentiment of these comments on a scale of 0-1:
-- 0 = Very negative
-- 0.5 = Neutral
-- 1 = Very positive
+        SENTIMENT_ANALYSIS_PROMPT = """Analyze the sentiment of these comments on a scale of 0-1.
+    0 = Very negative, 0.5 = Neutral, 1 = Very positive
 
-Comments:
-{comments}
+    Comments:
+    {comments}
 
-Respond with ONLY a JSON array of scores, one per comment:
-[0.8, 0.3, 0.9, ...]"""
+    Output ONLY a JSON array with one score per comment, nothing else:
+    [0.8, 0.3, 0.9]"""
 
     TOPIC_LABELING_PROMPT = """Given these representative comments from a cluster, generate a concise topic label (2-4 words) and 3-5 keywords.
 

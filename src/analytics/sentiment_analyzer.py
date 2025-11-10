@@ -15,6 +15,8 @@ from src.ai.prompts import Prompts
 from src.utils.helpers import batch_list
 from config import Config
 
+import re
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,6 +33,37 @@ class SentimentAnalyzer:
     """
     Performs sentiment analysis on comments.
     """
+    def _extract_json_array(self, text: str) -> Optional[List[float]]:
+        """
+        Extract JSON array from response text.
+
+        Handles cases where model returns text before/after JSON.
+
+        Args:
+            text: Response text from model
+
+        Returns:
+            List of floats if found, None otherwise
+        """
+        import re
+        
+        # Try to find JSON array pattern
+        json_match = re.search(r'\[[\d.,\s]+\]', text)
+        if json_match:
+            try:
+                return json.loads(json_match.group())
+            except json.JSONDecodeError:
+                pass
+        
+        # Try direct parse
+        text = text.strip()
+        if text.startswith('[') and text.endswith(']'):
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                pass
+        
+        return None
 
     def __init__(self, openai_client: OpenAIClient):
         """
@@ -52,8 +85,8 @@ class SentimentAnalyzer:
         Analyzes sentiment for all comments.
 
         Args:
-            comments: List of comments to analyze
-            batch_size: Batch size for processing
+            comments: List of Comment objects to analyze
+            batch_size: Optional batch size for processing
 
         Returns:
             SentimentResult with overall statistics
