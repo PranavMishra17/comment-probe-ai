@@ -133,7 +133,7 @@ def main():
             topics = topic_extractor.extract_topics(comments_to_analyze)
             print(f"    ✓ Extracted {len(topics)} topics:")
             for j, topic in enumerate(topics, 1):
-                print(f"      {j}. {topic.topic_name} ({len(topic.comment_ids)} comments)")
+                print(f"      {j}. {topic.topic_name} ({topic.comment_count} comments)")
 
             # Question finding
             print("  - Question finding...")

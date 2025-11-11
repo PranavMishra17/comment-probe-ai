@@ -150,14 +150,41 @@ class SentimentAnalyzer:
         try:
             result = self.openai_client.create_completion(
                 messages=[
-                    {"role": "system", "content": "You are a sentiment analysis expert."},
+                    {"role": "system", "content": "You are a sentiment analysis expert. Respond with ONLY a JSON array of numbers, no additional text."},
                     {"role": "user", "content": prompt}
                 ],
                 model=Config.FAST_COMPLETION_MODEL
             )
 
-            # Parse JSON array of scores
-            scores = json.loads(result.content)
+            # Extract and parse JSON array using robust extraction
+            content = result.content.strip()
+
+            if not content:
+                logger.error("[SentimentAnalyzer] Empty response from LLM")
+                return [0.5] * len(batch)
+
+            # Try direct parsing first
+            try:
+                scores = json.loads(content)
+            except json.JSONDecodeError as e:
+                # Use extraction method for contaminated responses
+                logger.warning(f"[SentimentAnalyzer] Direct JSON parse failed: {e}, attempting extraction")
+                scores = self._extract_json_array(content)
+
+                if scores is None:
+                    logger.error(f"[SentimentAnalyzer] JSON extraction failed, response: {content[:200]}")
+                    return [0.5] * len(batch)
+
+                logger.info("[SentimentAnalyzer] Successfully extracted JSON array after cleaning")
+
+            # Validate scores are numeric
+            if not isinstance(scores, list):
+                logger.error(f"[SentimentAnalyzer] Expected list, got {type(scores)}")
+                return [0.5] * len(batch)
+
+            # Convert all to float and validate range
+            scores = [float(s) for s in scores]
+            scores = [max(0.0, min(1.0, s)) for s in scores]  # Clamp to [0, 1]
 
             # Ensure we have the right number of scores
             if len(scores) != len(batch):

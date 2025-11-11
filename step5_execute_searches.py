@@ -103,14 +103,14 @@ def main():
             for j, spec in enumerate(video.static_search_specs, 1):
                 result = search_engine.execute_search(video, spec)
                 video_results.append(result)
-                print(f"    {j}. {spec.query[:50]}... → {len(result.results)} results")
+                print(f"    {j}. {spec.query[:50]}... → {len(result.matched_comments)} results")
 
             # Execute dynamic specs
             print(f"  Executing {len(video.dynamic_search_specs)} dynamic specs...")
             for j, spec in enumerate(video.dynamic_search_specs, 1):
                 result = search_engine.execute_search(video, spec)
                 video_results.append(result)
-                print(f"    {j}. {spec.query[:50]}... → {len(result.results)} results")
+                print(f"    {j}. {spec.query[:50]}... → {len(result.matched_comments)} results")
 
             all_results[video.id] = video_results
             print(f"  ✓ Completed {len(video_results)} searches")
@@ -121,7 +121,7 @@ def main():
         # Final statistics
         total_searches = sum(len(results) for results in all_results.values())
         total_comments_found = sum(
-            len(result.results)
+            len(result.matched_comments)
             for results in all_results.values()
             for result in results
         )

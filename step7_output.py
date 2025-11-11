@@ -24,6 +24,7 @@ from typing import List, Dict
 
 from src.utils.logger import setup_logging
 from src.output.output_manager import OutputManager
+from src.output.visualizer import Visualizer
 from src.core.session_manager import SessionManager
 from src.core.models import Video, AnalyticsResult, ProcessingMetadata
 from config import Config
@@ -59,8 +60,8 @@ def main():
             videos: List[Video] = data['videos']
             analytics: Dict[str, AnalyticsResult] = data['analytics']
             orphaned = data.get('orphaned', [])
-        print(f"✓ Loaded {len(videos)} videos")
-        print(f"✓ Loaded analytics for {len(analytics)} videos")
+        print(f"Loaded {len(videos)} videos")
+        print(f"Loaded analytics for {len(analytics)} videos")
         if orphaned:
             print(f"Note: {len(orphaned)} orphaned comments were excluded from analysis")
         print()
@@ -73,8 +74,8 @@ def main():
         print("Creating output directory...")
         run_dir = output_manager.create_run_directory()
         run_id = output_manager.get_run_id()
-        print(f"✓ Run ID: {run_id}")
-        print(f"✓ Output directory: {run_dir}")
+        print(f"Run ID: {run_id}")
+        print(f"Output directory: {run_dir}")
         print()
 
         # Create metadata
@@ -93,15 +94,24 @@ def main():
         # Save results
         print("Saving results...")
         output_manager.save_results(videos, analytics, metadata)
-        print(f"✓ Saved results to: {os.path.join(run_dir, Config.RESULTS_FILENAME)}")
-        print(f"✓ Saved metadata to: {os.path.join(run_dir, Config.METADATA_FILENAME)}")
+        print(f"Saved results to: {os.path.join(run_dir, Config.RESULTS_FILENAME)}")
+        print(f"Saved metadata to: {os.path.join(run_dir, Config.METADATA_FILENAME)}")
         print()
 
         # Save session for reuse
         print("Saving session for reuse...")
         session_file = session_manager.save_session(run_id, videos, analytics, metadata)
-        print(f"✓ Saved session to: {session_file}")
+        print(f"Saved session to: {session_file}")
         print()
+
+        # Generate visualization if enabled
+        if Config.ENABLE_VISUALIZATION:
+            print("Generating visualization...")
+            visualizer = Visualizer()
+            viz_path = os.path.join(run_dir, "visualization", Config.VISUALIZATION_FILENAME)
+            visualizer.generate_html(videos, analytics, metadata, viz_path)
+            print(f"Visualization saved to: {viz_path}")
+            print()
 
         # Summary
         print("=" * 70)
@@ -115,7 +125,10 @@ def main():
         print(f"  Comments: {metadata.total_comments}")
         print()
         print("View results:")
-        print(f"  python -m json.tool {os.path.join(run_dir, Config.RESULTS_FILENAME)}")
+        if Config.ENABLE_VISUALIZATION:
+            viz_file = os.path.join(run_dir, "visualization", Config.VISUALIZATION_FILENAME)
+            print(f"  Open in browser: {os.path.abspath(viz_file)}")
+        print(f"  JSON: python -m json.tool {os.path.join(run_dir, Config.RESULTS_FILENAME)}")
         print()
         print("Use this session for categorization:")
         print(f"  Session ID: {run_id}")
