@@ -1,10 +1,16 @@
-# YouTube Comments Analysis System - Assesment project
+# YouTube Comments Analysis System - Assessment Project
+
+[![Test Installation](https://github.com/YOUR_USERNAME/comment-probe-ai/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/comment-probe-ai/actions/workflows/test.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 <div align="center">
   <img src="static/home.png" alt="YouTube Comments Analysis System" width="600" />
 </div>
 
 Multi-agent comment analysis system featuring semantic search, LLM-based categorization, and automated insight extraction with comprehensive analytics pipeline.
+
+> **Note**: This repository does not include pre-generated analysis results. You must run the analysis on your own dataset first (Step 1) before using the web UI (Step 2).
 
 ## Features
 
@@ -46,19 +52,23 @@ Multi-agent comment analysis system featuring semantic search, LLM-based categor
 
 ## Usage
 
-### Option 1: All-in-One Analysis (Recommended)
+### 🚀 Quick Start with Web UI (Recommended)
 
-The fastest way to analyze your data is using the complete pipeline:
+The easiest way to use this system is through the **interactive web interface**:
+
+#### Step 1: Run Analysis
+
+First, analyze your dataset to generate results:
 
 ```bash
 python analyze.py dataset.csv
 ```
 
-**What it does:**
-- Automatically runs all 7 analysis steps (see below)
+This command:
+- Runs all 7 analysis steps automatically
 - Generates complete results in `output/run-{timestamp}/`
-- Typically takes 3-5 minutes for ~4,000 comments
-- Creates reusable session for future queries
+- Takes 3-5 minutes for ~4,000 comments
+- Creates reusable session with embeddings for fast searches
 
 **Options:**
 ```bash
@@ -69,7 +79,7 @@ python analyze.py dataset.csv --log-level DEBUG
 python analyze.py --csv dataset.csv
 ```
 
-**Output:**
+**Sample Output:**
 ```
 ================================================================================
 YouTube Comments Analysis System
@@ -104,7 +114,31 @@ Results: output/run-20251110_143215_892341/results.json
 Logs: output/run-20251110_143215_892341/logs/
 ```
 
-### Option 2: Step-by-Step Analysis (For Development/Debugging)
+#### Step 2: Launch Web UI
+
+Start the interactive web interface:
+
+```bash
+python app.py
+```
+
+Then open your browser to: **http://localhost:5000**
+
+**Web UI Features:**
+- 📊 **Load & Visualize** - Browse any analysis session with interactive charts
+- 🔍 **Semantic Search** - Natural language search across all comments with LLM ranking
+- 💧 **Water Bucket Viz** - Proportional sentiment distribution visualization
+- 🥧 **Pie Charts** - Topic distribution breakdowns
+- 🏷️ **Smart Categorization** - AI-powered topic matching for questions
+- 📈 **Real-time Analytics** - Sentiment scores, top topics, and key questions
+
+**That's it!** The web UI loads your analysis results and provides an intuitive interface for exploration and search.
+
+---
+
+### Alternative: Command-Line Analysis
+
+#### Option 1: Step-by-Step Pipeline (For Development/Debugging)
 
 Run individual steps manually for testing or debugging:
 
@@ -186,24 +220,7 @@ python step7_output.py intermediate/ --csv-file dataset.csv
 - Generates HTML visualization
 - Saves: `output/run-{timestamp}/` with all files
 
-### Option 3: Web UI
-
-For interactive visualization and search:
-
-```bash
-python app.py
-```
-
-Then open your browser to `http://localhost:5000`
-
-**Features:**
-- **Home Tab**: Load and view analysis sessions
-- **Algorithm Tab**: View system architecture and pipeline
-- **Search Tab**: Semantic search across comments with LLM ranking
-- **Analysis Tab**: View sentiment, topics, and questions
-- **Results Tab**: Browse detailed results per video
-
-### Option 4: CLI Search Tool
+#### Option 2: CLI Search Tool
 
 For testing semantic search from the command line:
 

@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Probe AI - Analysis Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            color: #000;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #000;
+            color: #ffeb3b;
+            padding: 30px;
+            text-align: center;
+            border: 4px solid #000;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 48px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            image-rendering: pixelated;
+        }
+
+        .meta {
+            color: #fff;
+            font-size: 14px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        h2 {
+            background: #ffeb3b;
+            color: #000;
+            padding: 15px 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border: 4px solid #000;
+            margin: 30px 0 20px;
+        }
+
+        h3 {
+            background: #000;
+            color: #ffeb3b;
+            padding: 10px 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: 3px solid #000;
+            margin: 20px 0 10px;
+        }
+
+        .step-box {
+            border: 3px solid #000;
+            margin: 15px 0;
+            background: #fff;
+        }
+
+        .step-header {
+            background: #ffeb3b;
+            color: #000;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #000;
+        }
+
+        .step-header:hover {
+            background: #000;
+            color: #ffeb3b;
+        }
+
+        .step-toggle {
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .step-content {
+            padding: 20px;
+            display: none;
+            background: #fff;
+            color: #000;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        .step-content p {
+            margin: 10px 0;
+        }
+
+        .step-content ul {
+            margin: 10px 0 10px 30px;
+        }
+
+        .step-content li {
+            margin: 5px 0;
+        }
+
+        .video-card {
+            border: 4px solid #000;
+            margin: 20px 0;
+            background: #fff;
+        }
+
+        .video-header {
+            background: #000;
+            color: #ffeb3b;
+            padding: 15px;
+            font-weight: bold;
+        }
+
+        .video-title {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .video-meta {
+            font-size: 12px;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        .video-body {
+            padding: 20px;
+        }
+
+        .stat-box {
+            border: 3px solid #000;
+            padding: 15px;
+            margin: 15px 0;
+            background: #ffeb3b;
+        }
+
+        .stat-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #000;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .distribution {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .dist-item {
+            flex: 1;
+            border: 2px solid #000;
+            padding: 10px;
+            background: #fff;
+            text-align: center;
+        }
+
+        .dist-label {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .dist-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .topic-item, .question-item {
+            border: 3px solid #000;
+            padding: 15px;
+            margin: 10px 0;
+            background: #fff;
+        }
+
+        .topic-header, .question-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .keyword {
+            background: #ffeb3b;
+            color: #000;
+            padding: 5px 10px;
+            border: 2px solid #000;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .comment-sample {
+            background: #f5f5f5;
+            border: 2px solid #000;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        .relevance {
+            color: #666;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+            .step-content {
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>COMMENT PROBE AI</h1>
+            <div class="meta">
+                Run ID: 20251111_191237_384174 | Videos: 6 | Comments: 6142
+            </div>
+        </header>
+
+        <section id="algorithm-section">
+            <h2>ALGORITHM OVERVIEW</h2>
+            <div class="steps-container">
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 1: LOAD & VALIDATE DATA</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Load the CSV dataset and validate its structure.</strong></p>
+                    <ul>
+                        <li>Read CSV file containing YouTube posts and comments</li><li>Validate required columns: id, url, content, author_id, parent_id</li><li>Check for data integrity issues</li><li>Filter out invalid or malformed entries</li><li>Statistics: Total rows, valid comments, orphaned comments</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 2: DISCOVER VIDEOS</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Identify which posts are videos vs comments.</strong></p>
+                    <ul>
+                        <li>Parse URLs to extract video IDs</li><li>Group comments by parent video using parent_id relationships</li><li>Handle orphaned comments (comments without identifiable videos)</li><li>Build Video objects with associated Comment objects</li><li>Optional: Step 2.5 attempts to reassign orphaned comments using semantic similarity</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 3: GENERATE EMBEDDINGS</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Convert comments to vector representations using OpenAI embeddings.</strong></p>
+                    <ul>
+                        <li>Use OpenAI text-embedding-3-small model</li><li>Generate 1536-dimensional embedding vectors for each comment</li><li>Cache embeddings to avoid duplicate API calls</li><li>Enable semantic search and similarity comparisons</li><li>Required for search execution and orphaned comment reassignment</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 4: GENERATE SEARCH SPECIFICATIONS</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Create search queries to find relevant comments.</strong></p>
+                    <ul>
+                        <li><strong>Static Specs:</strong> Universal searches applied to all videos (e.g., "Find critical feedback", "Find feature requests")</li><li><strong>Dynamic Specs:</strong> Video-specific searches generated by analyzing comment samples with LLM</li><li>LLM (GPT-4o) analyzes 10 sample comments per video to understand context</li><li>Generates 5 custom search specifications per video</li><li>Each spec includes: query, context, filters, extract_fields, rationale</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 5: EXECUTE SEARCHES</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Run semantic search + LLM ranking to find matching comments.</strong></p>
+                    <ul>
+                        <li><strong>Phase 1:</strong> Semantic Search - Find top 30 candidates using cosine similarity on embeddings</li><li><strong>Phase 2:</strong> LLM Ranking - Use GPT-4o-mini to re-rank candidates by true relevance</li><li>Apply filters specified in CommentSearchSpec</li><li>Extract insights from matched comments</li><li>Store SearchResult objects with matched comments and relevance scores</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 6: PERFORM ANALYTICS</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Analyze sentiment, extract topics, and identify questions.</strong></p>
+                    <ul>
+                        <li><strong>Sentiment Analysis:</strong> Batch comments and score each 0-1 (negative to positive) using GPT-4o-mini</li><li><strong>Topic Extraction:</strong> Cluster comments using K-means on embeddings, generate topic labels with LLM</li><li><strong>Question Finding:</strong> Extract questions from comments, validate and categorize them</li><li>Calculate aggregate statistics (overall sentiment, distribution)</li><li>Generate AnalyticsResult objects for each video</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step-box">
+                <div class="step-header">
+                    <span>STEP 7: GENERATE OUTPUT</span>
+                    <span class="step-toggle">+</span>
+                </div>
+                <div class="step-content">
+                    <p><strong>Save results and generate visualization.</strong></p>
+                    <ul>
+                        <li>Create timestamped output directory</li><li>Save results.json with complete analysis data</li><li>Save metadata.json with run statistics</li><li>Save session.pkl for future reuse/categorization</li><li>Generate HTML visualization (this page)</li><li>Display summary statistics and next steps</li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <section id="results-section">
+            <h2>ANALYSIS RESULTS</h2>
+            <div id="videos-container"></div>
+        </section>
+    </div>
+
+    <script>
+        const resultsData = [
+  {
+    "video_id": "FqIMu4C87SM",
+    "url": "https://www.youtube.com/watch?v=FqIMu4C87SM",
+    "title": "Check out Ridge! https://ridge.com/AUSTINEVANS\n\nSubscribe for more! https://www.youtube.com/austinevans\nTikTok: https://www.tiktok.com/@austintechtips\nInstagram: https://instagram.com/austinnotduncan\n...",
+    "comment_count": 576,
+    "sentiment": {
+      "overall_score": 0.4378472222222222,
+      "distribution": {
+        "positive": 123,
+        "neutral": 226,
+        "negative": 227
+      }
+    },
+    "topics": [
+      {
+        "name": "Framework Laptop Discussion",
+        "count": 97,
+        "percentage": 0.0,
+        "keywords": [
+          "Framework",
+          "laptops",
+          "consumer feedback",
+          "expectations",
+          "build quality"
+        ],
+        "representative_comments": [
+          {
+            "content": "1,5 years ago I decided in favor of buying a Yoga 7. Now I have multiple cracks on the plastic bezel around the screen and the plastic is shattered around both hinges. Even though I'm not a heavy duty user and mainly use it at home. Warranty repair denied claiming its due to physical damage (no it's...",
+            "relevance": 0.0
+          },
+          {
+            "content": "I came to this video thanks to a LTT video when people asked Linus to react to you (and he give you the reason), I agree, Framework laptops are very expensive and I suppose that is not their fault, as you say, they\u2019re a small company and that makes difficult to negotiate better prices for the compon...",
+            "relevance": 0.0
+          },
+          {
+            "content": "He\u2019s ABSOLUTELY RIGHT, so why have I paid my final payment for the even more expensive Intel Core Ultra version?\n\nIt\u2019s because he underestimates the true value proposition that the Framework 13 offers.\n\nFirstly, he\u2019s misunderstood the true cost: all he talks about is the upfront cost, when it\u2019s the ...",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Laptop Pricing Concerns",
+        "count": 86,
+        "percentage": 0.0,
+        "keywords": [
+          "expensive",
+          "build quality",
+          "pre-built",
+          "support companies",
+          "access to parts"
+        ],
+        "representative_comments": [
+          {
+            "content": "Yeah, they cost more than others. But surely we should be trying to support companies who are trying to support us.",
+            "relevance": 0.0
+          },
+          {
+            "content": "I agree with evans here, the laptop is indeed quite expensive for the specs and build quality they are offering",
+            "relevance": 0.0
+          },
+          {
+            "content": "150 dollars just to install an ssd some ram the bezel and keyboard is insane to me.",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Long-Term Tech Investment",
+        "count": 73,
+        "percentage": 0.0,
+        "keywords": [
+          "upgrades",
+          "maintainability",
+          "cost-effectiveness",
+          "longevity",
+          "hardware"
+        ],
+        "representative_comments": [
+          {
+            "content": "Here's the thing, are they shipping bad hardware or just not the \"bleeding edge?\" The whole model is around maintainability. You're right, it isn't apples-to-apples, but maybe that's the point: For what it's offering, at its price point, with what it offers in the future (and of course warranties an...",
+            "relevance": 0.0
+          },
+          {
+            "content": "It is a lot of money until you keep it for 10 years, and at the end of the ten years you have upgraded it multiple times and spent far less than what it would take to have a similarly powerful computer each time you upgraded it.",
+            "relevance": 0.0
+          },
+          {
+            "content": "Your points are corrct. But by the outdated tech i think it is way enough for 90% of the people. And i am just saying. It is cheaper to upgrade over time than always buying a new laptop. The ecological aspect is here not even considered.",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Names and Confusion",
+        "count": 53,
+        "percentage": 0.0,
+        "keywords": [
+          "names",
+          "confusion",
+          "comments",
+          "fan",
+          "discussion"
+        ],
+        "representative_comments": [
+          {
+            "content": "Anderson Mary Anderson Amy Lewis Elizabeth",
+            "relevance": 0.0
+          },
+          {
+            "content": "Lopez Charles Garcia Dorothy Lee Jose",
+            "relevance": 0.0
+          },
+          {
+            "content": "Moore Barbara Martin Kenneth Wilson Jessica",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Negative Product Reviews",
+        "count": 52,
+        "percentage": 0.0,
+        "keywords": [
+          "poor reviews",
+          "audience disconnect",
+          "inaccurate assessments",
+          "frustration",
+          "product criticism"
+        ],
+        "representative_comments": [
+          {
+            "content": "Swing and miss! You're a bit out of touch with the audience and purpose this laptop serves.",
+            "relevance": 0.0
+          },
+          {
+            "content": "This man annoys me, pls don't do reviews again when you don't know Jack shit",
+            "relevance": 0.0
+          },
+          {
+            "content": "I'll be honest guys. I wouldn't call the ridge wallet as a wallet, it's just a fancy card holder. It's feels really wrong for calling it a wallet and no youtube who is promoting it is questioning it at all.",
+            "relevance": 0.0
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "text": "He\u2019s ABSOLUTELY RIGHT, so why have I paid my final payment for the even more expensive Intel Core Ultra version? It\u2019s because he underestimates the true value proposition that the Framework 13 offers. Firstly, he\u2019s misunderstood the true cost: all he talks about is the upfront cost, when it\u2019s the savings on upgrade that redress the balance. E.g. to upgrade to the Ryzen 5 motherboard in his video it costs just $419. This gives an indication as to what I can expect in future...that\u2019s a bargain!! Plus, as Framework grows in popularity, economies of scale should push the price down. Secondly, when you upgrade your motherboard, you can repurpose your old motherboard eg as a server and there are free downloadable 3D printer case designs for Framework motherboards. Therefore, upon upgrading I get TWO computers not one new one...you need to add in the price of a free secondhand computer/server into the equation. Thirdly, computers break..it\u2019s a fact of life and the cost of repair is negligible with Framework compared to any other brand...and some brands are impossible to repair which means you have to replace the ENTIRE LAPTOP. This huge cost is missing from his analysis. Fourthly, he doesn\u2019t properly factor the value of recycling and waste prevention...he\u2019s just another mindless consumer who moans about the environment but does nothing about it even when the solution is in his hands. The cognitive dissonance is palpable but he dismisses it. Lastly, as a Linux user, it\u2019s fantastic to have a brand that\u2019s put support of Linux as a primary goal.",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Here's the thing, are they shipping bad hardware or just not the \"bleeding edge?\" The whole model is around maintainability. You're right, it isn't apples-to-apples, but maybe that's the point: For what it's offering, at its price point, with what it offers in the future (and of course warranties and what have you. After market support...).",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Why does Ridge Wallet hate their customers and want to saddle them with a massive gold-colored liability designed by a deranged billionaire?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Dosen't Framework pay alot more for all parts vs the competition? Everyone in the space is huge compared to them honestly the fact they're even able to release an upgradable laptop should be praised beyond belief but as far as everything else thanks for the review always helpful to see all sides.",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Apple charging an arm and a leg for RAM and storage is completely fine, but Framework asking \"TWO hUnDreD eIgHtY dOlLaRs\" for a legit CPU upgrade is too much for you?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      }
+    ]
+  },
+  {
+    "video_id": "ubSE4me-sE8",
+    "url": "https://www.youtube.com/watch?v=ubSE4me-sE8",
+    "title": "XREAL Beam Pro+XREAL Air 2 Pro Bundle: https://amzn.to/3SCKSdc\nXREAL Beam Pro: https://amzn.to/4dtUf6R\nXREAL Air 2 Pro:  https://bit.ly/3ypkRqI (Use discount code Sarah20 to get $20 off. Does not stac...",
+    "comment_count": 511,
+    "sentiment": {
+      "overall_score": 0.5968688845401174,
+      "distribution": {
+        "positive": 205,
+        "neutral": 191,
+        "negative": 115
+      }
+    },
+    "topics": [
+      {
+        "name": "Gaming and Humor",
+        "count": 117,
+        "percentage": 0.0,
+        "keywords": [
+          "Meta Quest",
+          "Recliner",
+          "Fonts",
+          "Rude Comments",
+          "Humor"
+        ],
+        "representative_comments": [
+          {
+            "content": "try the meta quest 3 or pro",
+            "relevance": 0.0
+          },
+          {
+            "content": "Rhaynes64 Reggie Room Recliner",
+            "relevance": 0.0
+          },
+          {
+            "content": "Hell nah you look blind with this \ud83d\ude02",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "VR Headset Prices",
+        "count": 66,
+        "percentage": 0.0,
+        "keywords": [
+          "Google Vision",
+          "Oculus Quest",
+          "Xreal Beam Pro",
+          "Apple Vision Pro",
+          "VR Pricing"
+        ],
+        "representative_comments": [
+          {
+            "content": "Google Vision Lite",
+            "relevance": 0.0
+          },
+          {
+            "content": "Try a meta or oculus quest 3 or maybe 2 but umm you were using the first gen",
+            "relevance": 0.0
+          },
+          {
+            "content": "Can't even get the clickbait right. Xreal with the Beam Pro is well over $500.",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Fan Engagement",
+        "count": 63,
+        "percentage": 0.0,
+        "keywords": [
+          "love",
+          "videos",
+          "subscription",
+          "Taylor Swift",
+          "support"
+        ],
+        "representative_comments": [
+          {
+            "content": "I love them. I would bring them everywhere if I had them.\u2764\ud83c\udf89",
+            "relevance": 0.0
+          },
+          {
+            "content": "Nice vid \u2764",
+            "relevance": 0.0
+          },
+          {
+            "content": "I subscribed.\ud83d\ude18",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Sarah's Giveaways",
+        "count": 63,
+        "percentage": 0.0,
+        "keywords": [
+          "giveaway",
+          "Sarah",
+          "BMW",
+          "laugh",
+          "comments"
+        ],
+        "representative_comments": [
+          {
+            "content": "Giveaway Sarah \u2764",
+            "relevance": 0.0
+          },
+          {
+            "content": "6:32 i Started Laughing Wen Sarah said Shrek  Butt Cheeks.,.,LOL \ud83d\ude02\ud83e\udd23",
+            "relevance": 0.0
+          },
+          {
+            "content": "When do u have the bmw m4 2018 Sarah",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Apple Product Requests",
+        "count": 54,
+        "percentage": 0.0,
+        "keywords": [
+          "giveaway",
+          "iPhone",
+          "Apple Watch",
+          "compatibility",
+          "Siri"
+        ],
+        "representative_comments": [
+          {
+            "content": "A giveaway for anything phone Apple Watch anything",
+            "relevance": 0.0
+          },
+          {
+            "content": "Hi can I have a giveaway pls",
+            "relevance": 0.0
+          },
+          {
+            "content": "Are these compatible with iPhone???",
+            "relevance": 0.0
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "text": "How is this content not banned yet? So much misinformation and dishonesty. Such an embarrassing portrayal of any credibility from this reviewer and downright deceitful. Reports have been filed.",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "How to Buy it?????????",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "An Apple vision pro for $200.-? Let me guess, youre jewish.",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Gorilla tag?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Are these compatible with iPhone???",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      }
+    ]
+  },
+  {
+    "video_id": "rdMyaxhWQ8k",
+    "url": "https://www.youtube.com/watch?v=rdMyaxhWQ8k",
+    "title": "Today we discuss the FNaF Movie 2 images and scripts!\n\nBecome a Dawkbro!\nhttps://hex.store/\nhttp://www.twitter.com/dawkosgames\nhttp://www.twitch.tv/dawkosgames\nhttps://instagram.com/lewis_dawkins/\nUSE...",
+    "comment_count": 1352,
+    "sentiment": {
+      "overall_score": 0.6446745562130177,
+      "distribution": {
+        "positive": 587,
+        "neutral": 644,
+        "negative": 121
+      }
+    },
+    "topics": [
+      {
+        "name": "Skepticism About Authenticity",
+        "count": 281,
+        "percentage": 0.0,
+        "keywords": [
+          "fake",
+          "real",
+          "fear",
+          "time",
+          "doubt"
+        ],
+        "representative_comments": [
+          {
+            "content": "No way that\u2019s real!",
+            "relevance": 0.0
+          },
+          {
+            "content": "Fake",
+            "relevance": 0.0
+          },
+          {
+            "content": "I fear these are fake",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Script Theories Discussion",
+        "count": 233,
+        "percentage": 0.0,
+        "keywords": [
+          "scripts",
+          "theory",
+          "nightmares",
+          "lore",
+          "plot"
+        ],
+        "representative_comments": [
+          {
+            "content": "23:47 It would be crazy if it will be all 4 scripts.",
+            "relevance": 0.0
+          },
+          {
+            "content": "theory for the last script you read. (ps im gonna call them by their lore name not movie name).\nso you have mikes mother and possibly father who would be william, and vanessa is his first kid and a year later he has mike, but vannessa got hiden from mike, and i think that gemma and darlin are willia...",
+            "relevance": 0.0
+          },
+          {
+            "content": "Imagine the scripts turn out to all be real",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "FNaF Movie Discussion",
+        "count": 186,
+        "percentage": 0.0,
+        "keywords": [
+          "FNaF",
+          "theory",
+          "upcoming movies",
+          "animatronics",
+          "excitement"
+        ],
+        "representative_comments": [
+          {
+            "content": "Wait guys! I have a theory for 21:53 ! The FNaF 2 Movie might have a matching universe with the FNaF novel \"The Silver Eyes\"! So there is Charlie (Gemma), and Sammy (Darrin), and Darrin will probably be taken!! Just like Sammy in the Novel Universe.",
+            "relevance": 0.0
+          },
+          {
+            "content": "I swear i watched an interview with mathew lilard eg springtrap and he said after fnaf movie 1 he's contracted to be in the next 3 movies, also not to sound nasty but jim henson studios making the animatronics thats gonna be top tear visuals there \ud83d\ude2e",
+            "relevance": 0.0
+          },
+          {
+            "content": "I'm SOOO excited for the FNAF 2 movie the BTS images of the animatronics look incredible and I can't wait for the film to come out next year, it's gonna be amazing!!! X3",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Animatronic Speculation",
+        "count": 165,
+        "percentage": 0.0,
+        "keywords": [
+          "old animatronics",
+          "Mangle movement",
+          "FNAF 2",
+          "withered animatronics",
+          "toy animatronics"
+        ],
+        "representative_comments": [
+          {
+            "content": "Are the old animatronics gonna be gone?!",
+            "relevance": 0.0
+          },
+          {
+            "content": "I'm curious how they'll make Mangle move and how big she'd be since she's more complex than Foxy",
+            "relevance": 0.0
+          },
+          {
+            "content": "Will the fnaf 2 animatronics have the stoner eyes from the first movie?",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Game Character Speculation",
+        "count": 130,
+        "percentage": 0.0,
+        "keywords": [
+          "Monty",
+          "Vanessa",
+          "arcade",
+          "security breach",
+          "Darrin"
+        ],
+        "representative_comments": [
+          {
+            "content": "Did he really just say that big mouth and thouse cheeks",
+            "relevance": 0.0
+          },
+          {
+            "content": "A gator? Monty? Third movie security breach?",
+            "relevance": 0.0
+          },
+          {
+            "content": "Btw, what were those photos of you with the UCN arcade machine, the Pac Clown statue, and the Puppet?",
+            "relevance": 0.0
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "text": "Are the old animatronics gonna be gone?!",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "A gator? Monty? Third movie security breach?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Will the fnaf 2 animatronics have the stoner eyes from the first movie?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "There\u2019s a deadmau5 head up there . I wonder if Jim Henson made any of the artist helmets ?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "So is this movie going to be a prequel like the game, or are they gonna readjust the timeline?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      }
+    ]
+  },
+  {
+    "video_id": "YKbDApzT1iw",
+    "url": "https://www.youtube.com/watch?v=YKbDApzT1iw",
+    "title": "Yesterday we had another update on Starliner's extended stay at the ISS, and depending on how things play out we could see the two crew members coming home before the end of the month.... or spending ...",
+    "comment_count": 1588,
+    "sentiment": {
+      "overall_score": 0.35623425692695215,
+      "distribution": {
+        "positive": 227,
+        "neutral": 568,
+        "negative": 793
+      }
+    },
+    "topics": [
+      {
+        "name": "Humorous Conversations",
+        "count": 310,
+        "percentage": 0.0,
+        "keywords": [
+          "vacation",
+          "confusion",
+          "curiosity",
+          "questions",
+          "funny"
+        ],
+        "representative_comments": [
+          {
+            "content": "Totally thought you were saying barbersocks for the first minute.",
+            "relevance": 0.0
+          },
+          {
+            "content": "Where will you go for vacation if your name was \"Green\"?",
+            "relevance": 0.0
+          },
+          {
+            "content": "3:19 oh man, now things make sense........",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Boeing Management Issues",
+        "count": 272,
+        "percentage": 0.0,
+        "keywords": [
+          "Boeing",
+          "management",
+          "reputation",
+          "problems",
+          "incompetence"
+        ],
+        "representative_comments": [
+          {
+            "content": "Marooned on Boeing Island....",
+            "relevance": 0.0
+          },
+          {
+            "content": "honest question here ... what's really going on with boeing ?  they just found more problems with more planes.  \ndo the actual workers designing and building things just not know what they are doing ?\nis it management ?\nthey used to be good right...",
+            "relevance": 0.0
+          },
+          {
+            "content": "Seems like you are just ignoring the fact that Boeing's reputation is such that if this thing fails and kills those guys, the company is done.",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "NASA ISS Criticism",
+        "count": 239,
+        "percentage": 0.0,
+        "keywords": [
+          "NASA",
+          "ISS",
+          "astronauts",
+          "rescue",
+          "misinformation"
+        ],
+        "representative_comments": [
+          {
+            "content": "What if we send captain marvel to rescue them?",
+            "relevance": 0.0
+          },
+          {
+            "content": "Honestly pathetic from NASA risking their Astronauts like that. THey should ask Russia for help.",
+            "relevance": 0.0
+          },
+          {
+            "content": "Curious question, why wouldn't it be possible to send extra Dragon mission to ISS to bring them back outside of already scheduled missions?",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "NASA and Boeing Criticism",
+        "count": 230,
+        "percentage": 0.0,
+        "keywords": [
+          "NASA",
+          "Boeing",
+          "SpaceX",
+          "privatization",
+          "astronauts"
+        ],
+        "representative_comments": [
+          {
+            "content": "Here\u2019s what NASA should do - drop Boeing and Bezo\u2019s and use what actually works, SPACE X - had they not screwed around with that disaster Boeing star liner we might have had men on the moon by now",
+            "relevance": 0.0
+          },
+          {
+            "content": "NASA and Boeing look like fools.",
+            "relevance": 0.0
+          },
+          {
+            "content": "I just read a brief article saying that one of the reasons NASA does not want the two astronauts that went up in the StarLiner to return in a SpaceX capsule is that their Boeing-designed spacesuits cannot be used in a SpaceX capsule. Is that actually true? If so, it would be great if Scott can expla...",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "SpaceX Starliner Concerns",
+        "count": 154,
+        "percentage": 0.0,
+        "keywords": [
+          "NASA",
+          "Crew Dragon",
+          "undocking",
+          "ISS",
+          "crew launch"
+        ],
+        "representative_comments": [
+          {
+            "content": "This just in:  NASA has confirmed that SpaceX will be bringing the Starliner crew (Barry Wilmore and Sunita Williams) home in 2025 on a Crew Dragon.  Starliner will return to Earth uncrewed (assuming it even survives reentry at this point).",
+            "relevance": 0.0
+          },
+          {
+            "content": "Eh ScotTY,\n concerning the Starliner, why not send a Tesla robot up there that could do the undocking sequence and re-entry?",
+            "relevance": 0.0
+          },
+          {
+            "content": "When I saw that they had launched a crew on Starliner, I was shook. It feels like the \"worst case scenario that would never actually happen\" happens a lot more theses days.",
+            "relevance": 0.0
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "text": "Where will you go for vacation if your name was \"Green\"?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "You can understand why they are putting an election before peoples lives because of fucking optics? You understand that huh? Astronauts lives come FIRST - to hell with that idiot bitchs election. I can\u2019t believe you just said that bro",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "What if we send captain marvel to rescue them?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "I just read a brief article saying that one of the reasons NASA does not want the two astronauts that went up in the StarLiner to return in a SpaceX capsule is that their Boeing-designed spacesuits cannot be used in a SpaceX capsule. Is that actually true? If so, it would be great if Scott can explain how that came to be 'cause not designing all the spacesuits to a common standard seems a little, erh, short sighted.",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "honest question here ... what's really going on with boeing ? they just found more problems with more planes. do the actual workers designing and building things just not know what they are doing ? is it management ? they used to be good right...",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      }
+    ]
+  },
+  {
+    "video_id": "2yyCnKcSrUg",
+    "url": "https://www.youtube.com/watch?v=2yyCnKcSrUg",
+    "title": "Go to https://tryfum.com/MOTHERTHEMOUNTAIN or scan the QR code and use code MOTHERTHEMOUNTAIN to get your free F\u00dcM Base when you order your Journey Pack today.\nYou can buy our book here! http://geni.u...",
+    "comment_count": 161,
+    "sentiment": {
+      "overall_score": 0.8130434782608696,
+      "distribution": {
+        "positive": 115,
+        "neutral": 31,
+        "negative": 15
+      }
+    },
+    "topics": [
+      {
+        "name": "Video Appreciation",
+        "count": 28,
+        "percentage": 0.0,
+        "keywords": [
+          "fence",
+          "sponsorship",
+          "beautiful",
+          "video",
+          "thank you"
+        ],
+        "representative_comments": [
+          {
+            "content": "Update: the fence worked! Thanks so much to F\u00dcM for sponsoring this video! Go to https://tryfum.com/MOTHERTHEMOUNTAIN or scan the QR code and use code MOTHERTHEMOUNTAIN to get your free F\u00dcM Base when you order your Journey Pack today.",
+            "relevance": 0.0
+          },
+          {
+            "content": "Muito lindo v\u00eddeo \ud83d\udc4f\ud83d\udc4f\ud83c\udde7\ud83c\uddf7",
+            "relevance": 0.0
+          },
+          {
+            "content": "So beautiful and cute \u2764\u2764\u2764",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Nature and Beauty",
+        "count": 26,
+        "percentage": 0.0,
+        "keywords": [
+          "beautiful",
+          "butterflies",
+          "lemons",
+          "scenery",
+          "smiles"
+        ],
+        "representative_comments": [
+          {
+            "content": "tudu muito lindo,",
+            "relevance": 0.0
+          },
+          {
+            "content": "Que hermosos limones tenes \u2764",
+            "relevance": 0.0
+          },
+          {
+            "content": "White butterfly \u2764\u2764\u2764\u2764",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Country Life Appreciation",
+        "count": 21,
+        "percentage": 0.0,
+        "keywords": [
+          "Brazil",
+          "farm",
+          "nature",
+          "homestead",
+          "videos"
+        ],
+        "representative_comments": [
+          {
+            "content": "I grew up on a farm here in Brazil and I love watching these girls' videos.",
+            "relevance": 0.0
+          },
+          {
+            "content": "I grew up on a farm here in Brazil and I love watching these girls' videos.",
+            "relevance": 0.0
+          },
+          {
+            "content": "It's great to live in the peaceful countryside.",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Longing for Connection",
+        "count": 16,
+        "percentage": 0.0,
+        "keywords": [
+          "love",
+          "relationship",
+          "marriage",
+          "distance",
+          "affection"
+        ],
+        "representative_comments": [
+          {
+            "content": "\u2764i want to come by your side in your country \u2764\u2764\u2764\u2764",
+            "relevance": 0.0
+          },
+          {
+            "content": "\u2764i want to come by your side \u2764\u2764\u2764",
+            "relevance": 0.0
+          },
+          {
+            "content": "\u2764 i want to come to you in your country \u2764\u2764\u2764",
+            "relevance": 0.0
+          }
+        ]
+      },
+      {
+        "name": "Bangladesh Agriculture",
+        "count": 14,
+        "percentage": 0.0,
+        "keywords": [
+          "harvest",
+          "food",
+          "sylhet",
+          "nature",
+          "barter"
+        ],
+        "representative_comments": [
+          {
+            "content": "I am watching from bangladesh",
+            "relevance": 0.0
+          },
+          {
+            "content": "Kebun yang luas..",
+            "relevance": 0.0
+          },
+          {
+            "content": "How do you make use of so much harvest? Do you sell and barter or let nature have the excess?",
+            "relevance": 0.0
+          }
+        ]
+      }
+    ],
+    "questions": [
+      {
+        "text": "How do you make use of so much harvest? Do you sell and barter or let nature have the excess?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "Hello! I hope you will be fine and happy.I love nature life and i love your content \u2764 Can i upload your content on Tiktok?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "The Kei was really a smart buy. What's with Julia's truck these days?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "are you jewish?",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      },
+      {
+        "text": "No Mum...I think your shorts are tasty treat than a piece of fruit!! LOL!! Boiling Mandarins?? Never heard of that one before!! And ohhh those cheeky goats!! LOL!!",
+        "category": "general",
+        "relevance": 0.8,
+        "engagement": 0.0,
+        "is_answered": false
+      }
+    ]
+  }
+];
+        
+        // Toggle algorithm steps
+        document.querySelectorAll('.step-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const toggle = header.querySelector('.step-toggle');
+
+                if (content.classList.contains('active')) {
+                    content.classList.remove('active');
+                    toggle.textContent = '+';
+                } else {
+                    content.classList.add('active');
+                    toggle.textContent = '-';
+                }
+            });
+        });
+
+        // Render video results
+        function renderVideos() {
+            const container = document.getElementById('videos-container');
+
+            resultsData.forEach((video, index) => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+
+                card.innerHTML = `
+                    <div class="video-header">
+                        <div>VIDEO ${index + 1}: ${video.video_id}</div>
+                        <div class="video-title">${escapeHtml(video.title)}</div>
+                        <div class="video-meta">
+                            ${video.comment_count} comments |
+                            <a href="${video.url}" target="_blank" style="color: #ffeb3b;">Watch on YouTube</a>
+                        </div>
+                    </div>
+                    <div class="video-body">
+                        ${renderSentiment(video.sentiment)}
+                        ${renderTopics(video.topics)}
+                        ${renderQuestions(video.questions)}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderSentiment(sentiment) {
+            const score = (sentiment.overall_score * 100).toFixed(0);
+            const scoreNum = parseInt(score);
+            const dist = sentiment.distribution;
+
+            const positive = dist.positive || 0;
+            const neutral = dist.neutral || 0;
+            const negative = dist.negative || 0;
+            const total = positive + neutral + negative || 1;
+
+            // Calculate color for sentiment score
+            const getScoreColor = (score) => {
+                const percent = score / 100;
+                if (percent <= 0.5) {
+                    const r = 255;
+                    const g = Math.round(255 * (percent * 2));
+                    const b = 100;
+                    return `rgb(${r}, ${g}, ${b})`;
+                } else {
+                    const r = Math.round(255 * (2 - percent * 2));
+                    const g = 255;
+                    const b = 100;
+                    return `rgb(${r}, ${g}, ${b})`;
+                }
+            };
+
+            const bucketHeight = 193;
+            const posPercent = ((positive / total) * 100).toFixed(0);
+            const neuPercent = ((neutral / total) * 100).toFixed(0);
+            const negPercent = ((negative / total) * 100).toFixed(0);
+            const posFillHeight = Math.max((positive / total) * bucketHeight, 10);
+            const neuFillHeight = Math.max((neutral / total) * bucketHeight, 10);
+            const negFillHeight = Math.max((negative / total) * bucketHeight, 10);
+
+            return `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px;">
+                    <div>
+                        <h3 style="margin-bottom: 20px;">OVERALL SENTIMENT</h3>
+                        <div style="width: 250px; margin: 0 auto;">
+                            <div style="height: 40px; background: linear-gradient(to right, #FF6464 0%, #FFFF64 50%, #90EE90 100%); border: 3px solid #000; position: relative;">
+                                <div style="position: absolute; left: ${scoreNum}%; top: -5px; transform: translateX(-50%); width: 4px; height: 50px; background: #000; border: 2px solid #fff;"></div>
+                            </div>
+                            <div style="margin-top: 20px; padding: 30px; background: ${getScoreColor(scoreNum)}; border: 4px solid #000; text-align: center; box-shadow: 5px 5px 0 #000;">
+                                <div style="font-size: 48px; font-weight: 700; color: #000;">${score}</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #000; margin-top: 5px;">/100</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 20px;">COMMENT DISTRIBUTION</h3>
+                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="font-weight: 700; margin-bottom: 10px; color: #000;">POSITIVE</div>
+                                <div style="position: relative; width: 100%; height: ${bucketHeight}px; border: 4px solid #000; background: #f5f5f5; box-shadow: 5px 5px 0 #000;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: ${posFillHeight}px; background: #90EE90; transition: height 0.5s;">
+                                        <div style="position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 14px; color: #000;">${posPercent}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; font-weight: 700; font-size: 16px; color: #000;">${positive}</div>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="font-weight: 700; margin-bottom: 10px; color: #000;">NEUTRAL</div>
+                                <div style="position: relative; width: 100%; height: ${bucketHeight}px; border: 4px solid #000; background: #f5f5f5; box-shadow: 5px 5px 0 #000;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: ${neuFillHeight}px; background: #FFFF64; transition: height 0.5s;">
+                                        <div style="position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 14px; color: #000;">${neuPercent}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; font-weight: 700; font-size: 16px; color: #000;">${neutral}</div>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="font-weight: 700; margin-bottom: 10px; color: #000;">NEGATIVE</div>
+                                <div style="position: relative; width: 100%; height: ${bucketHeight}px; border: 4px solid #000; background: #f5f5f5; box-shadow: 5px 5px 0 #000;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: ${negFillHeight}px; background: #FF6464; transition: height 0.5s;">
+                                        <div style="position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 14px; color: #000;">${negPercent}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; font-weight: 700; font-size: 16px; color: #000;">${negative}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTopics(topics) {
+            if (!topics || topics.length === 0) {
+                return '<div class="stat-box"><div class="stat-title">NO TOPICS FOUND</div></div>';
+            }
+
+            return `
+                <h3>TOP ${topics.length} TOPICS</h3>
+                ${topics.map(topic => `
+                    <div class="topic-item">
+                        <div class="topic-header">${escapeHtml(topic.name)} (${topic.count} comments)</div>
+                        <div class="keywords">
+                            ${topic.keywords.map(kw => `<span class="keyword">${escapeHtml(kw)}</span>`).join('')}
+                        </div>
+                        ${topic.representative_comments && topic.representative_comments.length > 0 ? `
+                            <div style="margin-top: 10px;">
+                                ${topic.representative_comments.map(comment => `
+                                    <div class="comment-sample">
+                                        ${escapeHtml(comment.content)}
+                                        <div class="relevance">Relevance: ${(comment.relevance * 100).toFixed(0)}%</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function renderQuestions(questions) {
+            if (!questions || questions.length === 0) {
+                return '<div class="stat-box"><div class="stat-title">NO QUESTIONS FOUND</div></div>';
+            }
+
+            return `
+                <h3>TOP ${questions.length} QUESTIONS</h3>
+                ${questions.map((q, i) => `
+                    <div class="question-item">
+                        <div class="question-header">${i + 1}. ${escapeHtml(q.text)}</div>
+                        <div style="margin-top: 5px; font-size: 13px;">
+                            Category: ${escapeHtml(q.category)} |
+                            Relevance: ${(q.relevance * 100).toFixed(0)}% |
+                            Engagement: ${q.engagement.toFixed(1)} |
+                            ${q.is_answered ? '<span style="color: #000; background: #ffeb3b; padding: 2px 5px; border: 1px solid #000;">ANSWERED</span>' : '<span style="color: #000;">Unanswered</span>'}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize
+        renderVideos();
+        
+    </script>
+</body>
+</html>

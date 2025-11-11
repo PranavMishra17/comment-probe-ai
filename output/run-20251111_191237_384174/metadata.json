@@ -1,0 +1,14 @@
+{
+  "run_id": "20251111_191237_384174",
+  "start_time": "2025-11-11T19:12:37.385207",
+  "end_time": "2025-11-11T19:12:37.385207",
+  "total_duration_seconds": 0.0,
+  "input_file": "dataset.csv",
+  "videos_processed": 6,
+  "total_comments": 6142,
+  "orphaned_comments": 0,
+  "api_calls_made": 0,
+  "api_cost_estimate": 0.0,
+  "errors": [],
+  "warnings": []
+}

@@ -15,7 +15,8 @@ build/
 .env.local
 
 # Outputs (generated data, not source code)
-/output/
+
+!/output/README.md
 /logs/
 *.log
 

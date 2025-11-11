@@ -1,0 +1,124 @@
+name: Test Installation & Setup
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Verify installation
+      run: |
+        python -c "import flask; print(f'Flask version: {flask.__version__}')"
+        python -c "import openai; print(f'OpenAI version: {openai.__version__}')"
+        python -c "import sklearn; print(f'scikit-learn version: {sklearn.__version__}')"
+
+    - name: Test imports
+      run: |
+        python -c "from config import Config; print('Config import successful')"
+        python -c "from src.core.models import Video, Comment; print('Models import successful')"
+        python -c "from src.ai.embedder import Embedder; print('Embedder import successful')"
+        python -c "from src.ai.search_engine import SearchEngine; print('SearchEngine import successful')"
+        python -c "from src.analytics.sentiment_analyzer import SentimentAnalyzer; print('SentimentAnalyzer import successful')"
+        python -c "from src.analytics.topic_extractor import TopicExtractor; print('TopicExtractor import successful')"
+
+    - name: Validate configuration (without API key)
+      run: |
+        python -c "
+        from config import Config
+        import os
+        # Test that config can be loaded without API key
+        os.environ.pop('OPENAI_API_KEY', None)
+        try:
+            Config.validate()
+            print('ERROR: Should have failed without API key')
+            exit(1)
+        except Exception as e:
+            print(f'Expected error caught: {str(e)[:100]}')
+            print('Configuration validation works correctly')
+        "
+
+    - name: Test Flask app initialization
+      run: |
+        python -c "
+        import os
+        os.environ['OPENAI_API_KEY'] = 'sk-test-key-for-import-testing-only'
+        from app import app
+        print('Flask app initialized successfully')
+        print(f'App name: {app.name}')
+        print('Routes registered:')
+        for rule in app.url_map.iter_rules():
+            print(f'  {rule.rule} -> {rule.endpoint}')
+        "
+
+    - name: Check directory structure
+      run: |
+        echo "Checking project structure..."
+        test -d src/core && echo "✓ src/core exists"
+        test -d src/ai && echo "✓ src/ai exists"
+        test -d src/analytics && echo "✓ src/analytics exists"
+        test -d src/data && echo "✓ src/data exists"
+        test -d src/output && echo "✓ src/output exists"
+        test -d src/utils && echo "✓ src/utils exists"
+        test -d static && echo "✓ static exists"
+        test -d templates && echo "✓ templates exists"
+        test -f app.py && echo "✓ app.py exists"
+        test -f analyze.py && echo "✓ analyze.py exists"
+        test -f config.py && echo "✓ config.py exists"
+        test -f requirements.txt && echo "✓ requirements.txt exists"
+        test -f README.md && echo "✓ README.md exists"
+
+    - name: Verify step scripts
+      run: |
+        echo "Checking step scripts..."
+        for i in {1..7}; do
+          test -f "step${i}"*.py && echo "✓ step${i} exists" || echo "✗ step${i} missing"
+        done
+
+    - name: Test code style (optional)
+      continue-on-error: true
+      run: |
+        pip install flake8
+        # Run flake8 with lenient settings
+        flake8 --count --select=E9,F63,F7,F82 --show-source --statistics src/ || true
+
+    - name: Summary
+      run: |
+        echo "=========================================="
+        echo "✓ All installation tests passed!"
+        echo "=========================================="
+        echo ""
+        echo "To use this system:"
+        echo "1. Set up your .env file with OPENAI_API_KEY"
+        echo "2. Run: python analyze.py your_dataset.csv"
+        echo "3. Launch web UI: python app.py"
+        echo "4. Open: http://localhost:5000"
