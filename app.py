@@ -244,7 +244,7 @@ def search_comments():
         return jsonify({
             'query': query,
             'total_matches': len(all_matches),
-            'matches': all_matches[:100],  # Limit to 100 results
+            'matches': all_matches[:10],  # Limit to 10 results
             'search_type': 'semantic'
         })
 

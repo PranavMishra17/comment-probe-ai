@@ -428,25 +428,83 @@ class Visualizer:
         }
 
         function renderSentiment(sentiment) {
-            const score = (sentiment.overall_score * 100).toFixed(1);
+            const score = (sentiment.overall_score * 100).toFixed(0);
+            const scoreNum = parseInt(score);
             const dist = sentiment.distribution;
 
+            const positive = dist.positive || 0;
+            const neutral = dist.neutral || 0;
+            const negative = dist.negative || 0;
+            const total = positive + neutral + negative || 1;
+
+            // Calculate color for sentiment score
+            const getScoreColor = (score) => {
+                const percent = score / 100;
+                if (percent <= 0.5) {
+                    const r = 255;
+                    const g = Math.round(255 * (percent * 2));
+                    const b = 100;
+                    return `rgb(${r}, ${g}, ${b})`;
+                } else {
+                    const r = Math.round(255 * (2 - percent * 2));
+                    const g = 255;
+                    const b = 100;
+                    return `rgb(${r}, ${g}, ${b})`;
+                }
+            };
+
+            const bucketHeight = 193;
+            const posPercent = ((positive / total) * 100).toFixed(0);
+            const neuPercent = ((neutral / total) * 100).toFixed(0);
+            const negPercent = ((negative / total) * 100).toFixed(0);
+            const posFillHeight = Math.max((positive / total) * bucketHeight, 10);
+            const neuFillHeight = Math.max((neutral / total) * bucketHeight, 10);
+            const negFillHeight = Math.max((negative / total) * bucketHeight, 10);
+
             return `
-                <div class="stat-box">
-                    <div class="stat-title">SENTIMENT ANALYSIS</div>
-                    <div class="stat-value">${score}/100</div>
-                    <div class="distribution">
-                        <div class="dist-item">
-                            <div class="dist-label">POSITIVE</div>
-                            <div class="dist-value">${dist.positive || 0}</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px;">
+                    <div>
+                        <h3 style="margin-bottom: 20px;">OVERALL SENTIMENT</h3>
+                        <div style="width: 250px; margin: 0 auto;">
+                            <div style="height: 40px; background: linear-gradient(to right, #FF6464 0%, #FFFF64 50%, #90EE90 100%); border: 3px solid #000; position: relative;">
+                                <div style="position: absolute; left: ${scoreNum}%; top: -5px; transform: translateX(-50%); width: 4px; height: 50px; background: #000; border: 2px solid #fff;"></div>
+                            </div>
+                            <div style="margin-top: 20px; padding: 30px; background: ${getScoreColor(scoreNum)}; border: 4px solid #000; text-align: center; box-shadow: 5px 5px 0 #000;">
+                                <div style="font-size: 48px; font-weight: 700; color: #000;">${score}</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #000; margin-top: 5px;">/100</div>
+                            </div>
                         </div>
-                        <div class="dist-item">
-                            <div class="dist-label">NEUTRAL</div>
-                            <div class="dist-value">${dist.neutral || 0}</div>
-                        </div>
-                        <div class="dist-item">
-                            <div class="dist-label">NEGATIVE</div>
-                            <div class="dist-value">${dist.negative || 0}</div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 20px;">COMMENT DISTRIBUTION</h3>
+                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="font-weight: 700; margin-bottom: 10px; color: #000;">POSITIVE</div>
+                                <div style="position: relative; width: 100%; height: ${bucketHeight}px; border: 4px solid #000; background: #f5f5f5; box-shadow: 5px 5px 0 #000;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: ${posFillHeight}px; background: #90EE90; transition: height 0.5s;">
+                                        <div style="position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 14px; color: #000;">${posPercent}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; font-weight: 700; font-size: 16px; color: #000;">${positive}</div>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="font-weight: 700; margin-bottom: 10px; color: #000;">NEUTRAL</div>
+                                <div style="position: relative; width: 100%; height: ${bucketHeight}px; border: 4px solid #000; background: #f5f5f5; box-shadow: 5px 5px 0 #000;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: ${neuFillHeight}px; background: #FFFF64; transition: height 0.5s;">
+                                        <div style="position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 14px; color: #000;">${neuPercent}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; font-weight: 700; font-size: 16px; color: #000;">${neutral}</div>
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                <div style="font-weight: 700; margin-bottom: 10px; color: #000;">NEGATIVE</div>
+                                <div style="position: relative; width: 100%; height: ${bucketHeight}px; border: 4px solid #000; background: #f5f5f5; box-shadow: 5px 5px 0 #000;">
+                                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: ${negFillHeight}px; background: #FF6464; transition: height 0.5s;">
+                                        <div style="position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-weight: 700; font-size: 14px; color: #000;">${negPercent}%</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 8px; font-weight: 700; font-size: 16px; color: #000;">${negative}</div>
+                            </div>
                         </div>
                     </div>
                 </div>

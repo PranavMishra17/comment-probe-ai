@@ -38,13 +38,13 @@
                 ALGORITHM OVERVIEW
                 <span class="tab-close" onclick="closeTab(event, 'algorithm')">×</span>
             </button>
-            <button class="tab-btn" data-tab="search">
-                SEARCH COMMENTS
-                <span class="tab-close" onclick="closeTab(event, 'search')">×</span>
-            </button>
             <button class="tab-btn" data-tab="results">
                 ANALYSIS RESULTS
                 <span class="tab-close" onclick="closeTab(event, 'results')">×</span>
+            </button>
+            <button class="tab-btn" data-tab="search">
+                SEARCH COMMENTS
+                <span class="tab-close" onclick="closeTab(event, 'search')">×</span>
             </button>
         </div>
 
@@ -54,10 +54,9 @@
         <!-- Home Screen (default view) -->
         <div id="home-screen" class="home-screen">
             <div class="home-content">
-                <h2>WELCOME TO COMMENT PROBE AI</h2>
+                <img src="/static/home.png" alt="Comment Probe AI" class="home-logo-small" onerror="this.style.display='none'">
                 <p class="home-subtitle"><strong>AI-Powered YouTube Comment Analysis System</strong></p>
                 <p class="home-brief">This tool analyzes YouTube comments using advanced NLP and LLM techniques to extract insights, identify topics, and understand sentiment.</p>
-                <img src="/static/home.png" alt="Comment Probe AI" class="home-logo" onerror="this.style.display='none'">
                 <div class="home-description">
                     <br>
                     <p><strong>Key Features:</strong></p>
