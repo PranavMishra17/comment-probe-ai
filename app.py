@@ -1,26 +1,20 @@
 """
-Flask application for YouTube Comments Analysis System.
+Flask application for Comment Probe AI - Interactive Web UI.
 
-Provides REST API endpoints for triggering analysis and retrieving results.
+Provides interactive visualization and search for analysis results.
 """
 
 import logging
-from flask import Flask, request, jsonify, send_file, render_template
+import json
 import os
+from flask import Flask, request, jsonify, render_template, send_from_directory
+from typing import List, Dict
 
 from src.utils.logger import setup_logging
-from src.core.orchestrator import Orchestrator
-from src.core.session_manager import SessionManager
-from src.core.models import Comment
-from src.ai.openai_client import OpenAIClient
-from src.ai.embedder import Embedder
-from src.utils.cache_manager import CacheManager
-from src.utils.rate_limiter import RateLimiter
-from src.utils.helpers import compute_cosine_similarity
 from config import Config
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 # Setup logging
 setup_logging(log_dir="logs", level=Config.LOG_LEVEL)
@@ -34,53 +28,16 @@ except Exception as e:
     logger.error(f"[App] Configuration validation failed: {e}")
     raise
 
-# Initialize components
-orchestrator = None
-session_manager = SessionManager(Config.OUTPUT_BASE_DIR)
-
-
-def get_orchestrator():
-    """Gets or creates orchestrator instance."""
-    global orchestrator
-    if orchestrator is None:
-        orchestrator = Orchestrator(Config)
-    return orchestrator
-
 
 @app.route('/', methods=['GET'])
 def index():
     """
-    Serves the main web UI.
+    Serves the main interactive web UI.
 
     Returns:
-        HTML page
+        HTML page with run selector and visualization
     """
     return render_template('index.html')
-  
-  
-def root():
-    """
-    Root endpoint providing API documentation.
-
-    Returns:
-        JSON with available endpoints
-    """
-    return jsonify({
-        "service": "YouTube Comments Analysis System",
-        "version": "1.0",
-        "endpoints": {
-            "GET /": "API documentation (this endpoint)",
-            "GET /health": "Health check",
-            "POST /analyze": "Start analysis of a CSV file",
-            "GET /results/<run_id>": "Retrieve results for a run",
-            "GET /runs": "List all available runs"
-        },
-        "example_request": {
-            "method": "POST",
-            "path": "/analyze",
-            "body": {"csv_path": "/path/to/comments.csv"}
-        }
-    })
 
 
 @app.route('/health', methods=['GET'])
@@ -93,105 +50,46 @@ def health():
     """
     return jsonify({
         "status": "healthy",
-        "service": "YouTube Comments Analysis System"
+        "service": "Comment Probe AI"
     })
 
 
-@app.route('/analyze', methods=['POST'])
-def analyze():
-    """
-    Triggers analysis of CSV file.
-
-    Request Body:
-        {
-            "csv_path": "path/to/file.csv"
-        }
-
-    Returns:
-        JSON with run_id and status
-    """
-    try:
-        data = request.get_json()
-        csv_path = data.get('csv_path')
-
-        if not csv_path:
-            return jsonify({"error": "csv_path is required"}), 400
-
-        if not os.path.exists(csv_path):
-            return jsonify({"error": f"File not found: {csv_path}"}), 404
-
-        logger.info(f"[App] Starting analysis of {csv_path}")
-
-        # Run analysis
-        orch = get_orchestrator()
-        run_id = orch.run_analysis(csv_path)
-
-        # Save session for reuse
-        try:
-            session_data = session_manager.load_session(run_id)
-            logger.info(f"[App] Session data available for reuse")
-        except Exception as e:
-            logger.warning(f"[App] Could not save session: {e}")
-
-        logger.info(f"[App] Analysis complete - Run ID: {run_id}")
-
-        return jsonify({
-            "status": "complete",
-            "run_id": run_id,
-            "message": f"Analysis complete. Results available in output/run-{run_id}/"
-        })
-
-    except Exception as e:
-        logger.error(f"[App] Analysis failed: {e}", exc_info=True)
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
-
-
-@app.route('/results/<run_id>', methods=['GET'])
-def get_results(run_id):
-    """
-    Retrieves results.json for a run.
-
-    Args:
-        run_id: Run identifier
-
-    Returns:
-        JSON results file
-    """
-    try:
-        results_path = os.path.join(Config.OUTPUT_BASE_DIR, f"run-{run_id}", Config.RESULTS_FILENAME)
-
-        if not os.path.exists(results_path):
-            return jsonify({"error": f"Results not found for run {run_id}"}), 404
-
-        return send_file(results_path, mimetype='application/json')
-
-    except Exception as e:
-        logger.error(f"[App] Failed to retrieve results: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/runs', methods=['GET'])
+@app.route('/api/runs', methods=['GET'])
 def list_runs():
     """
-    Lists all available runs.
+    Lists all available analysis runs.
 
     Returns:
-        JSON list of run IDs
+        JSON list of runs with metadata
     """
     try:
         if not os.path.exists(Config.OUTPUT_BASE_DIR):
-            return jsonify({"runs": []})
+            return jsonify({"runs": [], "count": 0})
 
         runs = []
         for item in os.listdir(Config.OUTPUT_BASE_DIR):
             if item.startswith('run-'):
                 run_id = item.replace('run-', '')
-                runs.append(run_id)
+                run_dir = os.path.join(Config.OUTPUT_BASE_DIR, item)
 
-        runs.sort(reverse=True)  # Most recent first
+                # Load metadata if available
+                metadata_path = os.path.join(run_dir, Config.METADATA_FILENAME)
+                metadata = {}
+                if os.path.exists(metadata_path):
+                    try:
+                        with open(metadata_path, 'r') as f:
+                            metadata = json.load(f)
+                    except:
+                        pass
+
+                runs.append({
+                    'run_id': run_id,
+                    'timestamp': metadata.get('timestamp', ''),
+                    'videos': metadata.get('videos_analyzed', 0),
+                    'comments': metadata.get('total_comments', 0)
+                })
+
+        runs.sort(key=lambda x: x['run_id'], reverse=True)  # Most recent first
 
         return jsonify({"runs": runs, "count": len(runs)})
 
@@ -200,124 +98,148 @@ def list_runs():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/categorize', methods=['POST'])
-def categorize_comment():
+@app.route('/api/results/<run_id>', methods=['GET'])
+def get_results(run_id):
     """
-    Categorizes a new comment using an existing session.
+    Retrieves results.json for a run.
+
+    Args:
+        run_id: Run identifier
+
+    Returns:
+        JSON results
+    """
+    try:
+        results_path = os.path.join(Config.OUTPUT_BASE_DIR, f"run-{run_id}", Config.RESULTS_FILENAME)
+
+        if not os.path.exists(results_path):
+            return jsonify({"error": f"Results not found for run {run_id}"}), 404
+
+        with open(results_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+
+        return jsonify(results)
+
+    except Exception as e:
+        logger.error(f"[App] Failed to retrieve results: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/search', methods=['POST'])
+def search_comments():
+    """
+    Searches comments across videos in a run.
 
     Request Body:
         {
-            "session_id": "run_id",
-            "comment": "comment text"
+            "run_id": "run identifier",
+            "query": "search query",
+            "video_ids": ["optional", "list", "of", "video", "ids"]
         }
 
     Returns:
-        JSON with categorization results
+        JSON with matching comments
     """
     try:
         data = request.get_json()
-        session_id = data.get('session_id')
-        comment_text = data.get('comment')
+        run_id = data.get('run_id')
+        query = data.get('query', '').lower()
+        video_ids_filter = data.get('video_ids', [])
 
-        if not session_id or not comment_text:
-            return jsonify({"error": "session_id and comment are required"}), 400
+        if not run_id or not query:
+            return jsonify({"error": "run_id and query are required"}), 400
 
-        logger.info(f"[App] Categorizing comment using session {session_id}")
+        results_path = os.path.join(Config.OUTPUT_BASE_DIR, f"run-{run_id}", Config.RESULTS_FILENAME)
 
-        # Load session
-        session = session_manager.load_session(session_id)
-        if not session:
-            return jsonify({"error": f"Session {session_id} not found"}), 404
+        if not os.path.exists(results_path):
+            return jsonify({"error": f"Results not found for run {run_id}"}), 404
 
-        # Initialize AI components for categorization
-        cache_mgr = CacheManager(Config.CACHE_DIR)
-        rate_limiter = RateLimiter(Config.REQUESTS_PER_MINUTE, Config.TOKENS_PER_MINUTE)
-        openai_client = OpenAIClient(Config.OPENAI_API_KEY, rate_limiter)
-        embedder = Embedder(openai_client, cache_mgr)
+        with open(results_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
 
-        # Create comment object
-        new_comment = Comment(
-            id="new_comment",
-            url="",
-            content=comment_text,
-            author_id="unknown",
-            parent_id="unknown"
-        )
-        new_comment.cleaned_content = comment_text
+        # Search through videos
+        matches = []
+        for video in results.get('videos', []):
+            video_id = video.get('video_id', '')
 
-        # Generate embedding
-        new_comment.embedding = embedder.embed_text(comment_text)
+            # Filter by video_ids if specified
+            if video_ids_filter and video_id not in video_ids_filter:
+                continue
 
-        # Find most similar topic
-        videos = session.get('videos', [])
-        best_similarity = 0
-        best_topic = "Unknown"
-        best_video = None
+            # Search in topics
+            for topic in video.get('analytics', {}).get('topics', []):
+                if query in topic.get('topic_name', '').lower():
+                    for comment in topic.get('representative_comments', []):
+                        if query in comment.get('content', '').lower():
+                            matches.append({
+                                'video_id': video_id,
+                                'video_url': video.get('url', ''),
+                                'comment': comment.get('content', ''),
+                                'match_type': 'topic',
+                                'topic_name': topic.get('topic_name', ''),
+                                'relevance': comment.get('relevance_score', 0)
+                            })
 
-        for video in videos:
-            for comment in video.comments[:50]:  # Sample for performance
-                if comment.embedding:
-                    similarity = compute_cosine_similarity(
-                        new_comment.embedding,
-                        comment.embedding
-                    )
-                    if similarity > best_similarity:
-                        best_similarity = similarity
-                        best_video = video
+            # Search in questions
+            for question in video.get('analytics', {}).get('questions', []):
+                if query in question.get('question_text', '').lower():
+                    matches.append({
+                        'video_id': video_id,
+                        'video_url': video.get('url', ''),
+                        'comment': question.get('question_text', ''),
+                        'match_type': 'question',
+                        'category': question.get('category', ''),
+                        'relevance': question.get('relevance_score', 0)
+                    })
 
-        # Get analytics for best matching video
-        analytics = session.get('analytics', {})
-        if best_video and best_video.id in analytics:
-            video_analytics = analytics[best_video.id]
-            if video_analytics.top_topics:
-                best_topic = video_analytics.top_topics[0].topic_name
-
-        # Simple sentiment estimation (0-1)
-        sentiment_words_positive = ['good', 'great', 'love', 'excellent', 'awesome', 'thanks']
-        sentiment_words_negative = ['bad', 'hate', 'terrible', 'awful', 'worst', 'disappointed']
-
-        text_lower = comment_text.lower()
-        sentiment = 0.5  # Neutral default
-
-        positive_count = sum(1 for word in sentiment_words_positive if word in text_lower)
-        negative_count = sum(1 for word in sentiment_words_negative if word in text_lower)
-
-        if positive_count > negative_count:
-            sentiment = 0.7 + (positive_count * 0.1)
-        elif negative_count > positive_count:
-            sentiment = 0.3 - (negative_count * 0.1)
-
-        sentiment = max(0, min(1, sentiment))  # Clamp to 0-1
-
-        # Determine category
-        if '?' in comment_text:
-            category = "question"
-        elif any(word in text_lower for word in ['suggest', 'should', 'could', 'would']):
-            category = "suggestion"
-        elif any(word in text_lower for word in ['issue', 'problem', 'bug', 'error']):
-            category = "issue"
-        else:
-            category = "feedback"
-
-        logger.info(f"[App] Categorization complete")
+        # Sort by relevance
+        matches.sort(key=lambda x: x.get('relevance', 0), reverse=True)
 
         return jsonify({
-            "sentiment": sentiment,
-            "similar_topic": best_topic,
-            "similarity_score": best_similarity,
-            "category": category,
-            "comment": comment_text
+            'query': query,
+            'total_matches': len(matches),
+            'matches': matches[:100]  # Limit to 100 results
         })
 
     except Exception as e:
-        logger.error(f"[App] Categorization failed: {e}", exc_info=True)
-        return jsonify({
-            "status": "error",
-            "error": str(e)
-        }), 500
+        logger.error(f"[App] Search failed: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/video/<run_id>/<video_id>', methods=['GET'])
+def get_video_details(run_id, video_id):
+    """
+    Gets detailed information about a specific video.
+
+    Args:
+        run_id: Run identifier
+        video_id: Video identifier
+
+    Returns:
+        JSON with video details
+    """
+    try:
+        results_path = os.path.join(Config.OUTPUT_BASE_DIR, f"run-{run_id}", Config.RESULTS_FILENAME)
+
+        if not os.path.exists(results_path):
+            return jsonify({"error": f"Results not found for run {run_id}"}), 404
+
+        with open(results_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+
+        # Find the video
+        for video in results.get('videos', []):
+            if video.get('video_id') == video_id:
+                return jsonify(video)
+
+        return jsonify({"error": f"Video {video_id} not found"}), 404
+
+    except Exception as e:
+        logger.error(f"[App] Failed to get video details: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
-    logger.info("[App] Starting Flask application")
-    logger.info("[App] Web UI available at http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    logger.info("[App] Starting Comment Probe AI Web UI")
+    logger.info("[App] Access at http://localhost:5000")
+    app.run(host='0.0.0.0', port=5000, debug=True)
