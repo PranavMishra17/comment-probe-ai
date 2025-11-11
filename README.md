@@ -1,6 +1,6 @@
 # YouTube Comments Analysis System - Assessment Project
 
-[![Test Installation](https://github.com/YOUR_USERNAME/comment-probe-ai/actions/workflows/test.yml/badge.svg)](https://github.com/YOUR_USERNAME/comment-probe-ai/actions/workflows/test.yml)
+[![Test Installation](https://github.com/YOUR_USERNAME/comment-probe-ai/actions/workflows/test.yml/badge.svg)](https://github.com/PranavMishra17/comment-probe-ai/actions/workflows/test.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -10,7 +10,7 @@
 
 Multi-agent comment analysis system featuring semantic search, LLM-based categorization, and automated insight extraction with comprehensive analytics pipeline.
 
-> **Note**: This repository does not include pre-generated analysis results. You must run the analysis on your own dataset first (Step 1) before using the web UI (Step 2).
+> **Note**: This repository includes one pre-generated analysis result for demonstration. You can use the web UI immediately, or run the analysis on your own dataset first (Step 1) before using the web UI (Step 2).
 
 ## Features
 
@@ -55,6 +55,9 @@ Multi-agent comment analysis system featuring semantic search, LLM-based categor
 ### 🚀 Quick Start with Web UI (Recommended)
 
 The easiest way to use this system is through the **interactive web interface**:
+
+
+![Screenshot of sentiment analysis for a youtube video from dataset](static/sentiment.png)
 
 #### Step 1: Run Analysis
 
@@ -503,3 +506,23 @@ comment-probe-ai/
 ## License
 
 See LICENSE file.
+
+
+## Connect with me
+
+<table align="center">
+<tr>
+<td width="200px">
+  <img src="static/images/me.png" alt="Pranav Mishra" width="180" style="border: 5px solid; border-image: linear-gradient(45deg, #9d4edd, #ff006e) 1;">
+</td>
+<td>
+  
+[![Portfolio](https://img.shields.io/badge/-Portfolio-000?style=for-the-badge&logo=vercel&logoColor=white)](https://portfolio-pranav-mishra-paranoid.vercel.app)
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pranavgamedev/)
+[![Resume](https://img.shields.io/badge/-Resume-4B0082?style=for-the-badge&logo=read-the-docs&logoColor=white)](https://portfolio-pranav-mishra-paranoid.vercel.app/resume)
+[![YouTube](https://img.shields.io/badge/-YouTube-8B0000?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@parano1dgames/featured)
+[![Hugging Face](https://img.shields.io/badge/-Hugging%20Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/Paranoiid)
+
+</td>
+</tr>
+</table>
