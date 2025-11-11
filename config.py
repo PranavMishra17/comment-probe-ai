@@ -55,10 +55,14 @@ class Config:
     CACHE_DIR: str = os.getenv('CACHE_DIR', './cache')
 
     # Orphaned Comment Reassignment Configuration
+    # WARNING: Orphaned comments may not belong to videos in your dataset!
+    # They could be replies to other comments or from completely different videos.
+    # Reassignment based on semantic similarity may introduce noise.
     ENABLE_ORPHAN_REASSIGNMENT: bool = os.getenv('ENABLE_ORPHAN_REASSIGNMENT', 'true').lower() == 'true'
-    SEMANTIC_SIMILARITY_THRESHOLD: float = float(os.getenv('SEMANTIC_SIMILARITY_THRESHOLD', '0.7'))
+    SEMANTIC_SIMILARITY_THRESHOLD: float = float(os.getenv('SEMANTIC_SIMILARITY_THRESHOLD', '0.85'))  # High threshold to reduce false positives
     CREATE_UNASSIGNED_VIDEO: bool = os.getenv('CREATE_UNASSIGNED_VIDEO', 'true').lower() == 'true'
-    SKIP_UNASSIGNED_IN_ANALYTICS: bool = os.getenv('SKIP_UNASSIGNED_IN_ANALYTICS', 'false').lower() == 'true'
+    SKIP_REASSIGNED_IN_ANALYTICS: bool = os.getenv('SKIP_REASSIGNED_IN_ANALYTICS', 'true').lower() == 'true'  # Skip reassigned comments by default
+    SKIP_UNASSIGNED_IN_ANALYTICS: bool = os.getenv('SKIP_UNASSIGNED_IN_ANALYTICS', 'true').lower() == 'true'  # Skip unassigned group by default
 
     # Output Configuration
     OUTPUT_BASE_DIR: str = os.getenv('OUTPUT_BASE_DIR', './output')

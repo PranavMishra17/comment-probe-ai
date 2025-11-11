@@ -55,7 +55,7 @@ def main():
             data = pickle.load(f)
             videos: List[Video] = data['videos']
             orphaned = data.get('orphaned', [])
-        print(f"✓ Loaded {len(videos)} videos")
+        print(f"Loaded {len(videos)} videos")
         print()
 
         # Initialize AI components
@@ -66,13 +66,13 @@ def main():
         )
         openai_client = OpenAIClient(Config.OPENAI_API_KEY, rate_limiter)
         hypothesis_generator = HypothesisGenerator(openai_client)
-        print("✓ Components initialized")
+        print("Components initialized")
         print()
 
         # Load static specs
         print("Loading static search specs...")
         static_specs = [CommentSearchSpec.from_dict(spec) for spec in Config.STATIC_SEARCH_SPECS]
-        print(f"✓ Loaded {len(static_specs)} static specs:")
+        print(f"Loaded {len(static_specs)} static specs:")
         for i, spec in enumerate(static_specs, 1):
             print(f"  {i}. {spec.query[:60]}...")
         print()
@@ -93,7 +93,7 @@ def main():
             dynamic_specs = hypothesis_generator.generate_search_specs(video)
             video.dynamic_search_specs = dynamic_specs
 
-            print(f"  ✓ Generated {len(dynamic_specs)} dynamic specs:")
+            print(f"  Generated {len(dynamic_specs)} dynamic specs:")
             for j, spec in enumerate(dynamic_specs, 1):
                 print(f"    {j}. {spec.query[:60]}...")
 
@@ -103,16 +103,16 @@ def main():
         # Final statistics
         total_static = sum(len(v.static_search_specs) for v in videos)
         total_dynamic = sum(len(v.dynamic_search_specs) for v in videos)
-        print(f"\n✓ Total static specs: {total_static}")
-        print(f"✓ Total dynamic specs: {total_dynamic}")
-        print(f"✓ Total specs: {total_static + total_dynamic}")
+        print(f"\nTotal static specs: {total_static}")
+        print(f"Total dynamic specs: {total_dynamic}")
+        print(f"Total specs: {total_static + total_dynamic}")
         print()
 
         # Save intermediate state
         output_file = os.path.join(args.data_dir, "step4_videos_with_specs.pkl")
         with open(output_file, 'wb') as f:
             pickle.dump({'videos': videos, 'orphaned': orphaned}, f)
-        print(f"✓ Saved to: {output_file}")
+        print(f"Saved to: {output_file}")
         print()
 
         print("=" * 70)

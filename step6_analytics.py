@@ -87,12 +87,42 @@ def main():
         analytics: Dict[str, AnalyticsResult] = {}
 
         for i, video in enumerate(videos, 1):
-            print(f"\nVideo {i}/{len(videos)}: {video.id}")
-            print(f"  Analyzing {len(video.comments)} comments...")
+            # Filter comments based on config
+            comments_to_analyze = video.comments
+
+            # Skip UNASSIGNED virtual video if configured
+            if Config.SKIP_UNASSIGNED_IN_ANALYTICS and video.video_metadata.get('is_unassigned'):
+                print(f"\nVideo {i}/{len(videos)}: {video.id} [SKIPPED - Unassigned Group]")
+                continue
+
+            # Filter out reassigned comments if configured
+            if Config.SKIP_REASSIGNED_IN_ANALYTICS:
+                original_count = len(comments_to_analyze)
+                comments_to_analyze = [
+                    c for c in comments_to_analyze
+                    if not c.metadata.get('reassigned')
+                ]
+                reassigned_count = original_count - len(comments_to_analyze)
+
+                if reassigned_count > 0:
+                    print(f"\nVideo {i}/{len(videos)}: {video.id}")
+                    print(f"  Total comments: {original_count}")
+                    print(f"  Filtered out {reassigned_count} reassigned comments (may introduce noise)")
+                    print(f"  Analyzing {len(comments_to_analyze)} original comments...")
+                else:
+                    print(f"\nVideo {i}/{len(videos)}: {video.id}")
+                    print(f"  Analyzing {len(comments_to_analyze)} comments...")
+            else:
+                print(f"\nVideo {i}/{len(videos)}: {video.id}")
+                print(f"  Analyzing {len(comments_to_analyze)} comments...")
+
+            if not comments_to_analyze:
+                print("  ⚠ No comments to analyze after filtering, skipping...")
+                continue
 
             # Sentiment analysis
             print("  - Sentiment analysis...")
-            sentiment_result = sentiment_analyzer.analyze_sentiment(video.comments)
+            sentiment_result = sentiment_analyzer.analyze_sentiment(comments_to_analyze)
             print(f"    ✓ Overall sentiment: {sentiment_result.overall_score:.2f}")
             print(f"    ✓ Distribution: Positive={sentiment_result.distribution.get('positive', 0)}, "
                   f"Neutral={sentiment_result.distribution.get('neutral', 0)}, "
@@ -100,14 +130,14 @@ def main():
 
             # Topic extraction
             print("  - Topic extraction...")
-            topics = topic_extractor.extract_topics(video.comments)
+            topics = topic_extractor.extract_topics(comments_to_analyze)
             print(f"    ✓ Extracted {len(topics)} topics:")
             for j, topic in enumerate(topics, 1):
                 print(f"      {j}. {topic.topic_name} ({len(topic.comment_ids)} comments)")
 
             # Question finding
             print("  - Question finding...")
-            questions = question_finder.find_top_questions(video.comments)
+            questions = question_finder.find_top_questions(comments_to_analyze)
             print(f"    ✓ Found {len(questions)} top questions")
 
             # Create analytics result

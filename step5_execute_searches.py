@@ -81,7 +81,17 @@ def main():
         all_results: Dict[str, List] = {}
 
         for i, video in enumerate(videos, 1):
+            # Skip UNASSIGNED virtual video if configured
+            if Config.SKIP_UNASSIGNED_IN_ANALYTICS and video.video_metadata.get('is_unassigned'):
+                print(f"\nVideo {i}/{len(videos)}: {video.id} [SKIPPED - Unassigned Group]")
+                continue
+
             print(f"\nVideo {i}/{len(videos)}: {video.id}")
+
+            # Report on reassigned comments if present
+            reassigned_count = sum(1 for c in video.comments if c.metadata.get('reassigned'))
+            if reassigned_count > 0:
+                print(f"  Note: {reassigned_count}/{len(video.comments)} comments are reassigned (may affect search relevance)")
 
             total_specs = len(video.static_search_specs) + len(video.dynamic_search_specs)
             print(f"  Total search specs: {total_specs}")

@@ -41,6 +41,11 @@ def main():
         action='store_true',
         help='Skip semantic similarity matching (faster, pattern-only)'
     )
+    parser.add_argument(
+        '--no-prompt',
+        action='store_true',
+        help='Skip interactive warning prompt (for automated workflows)'
+    )
     args = parser.parse_args()
 
     # Setup logging
@@ -50,6 +55,19 @@ def main():
     print("STEP 2.5: REASSIGN ORPHANED COMMENTS (OPTIONAL)")
     print("=" * 70)
     print()
+    print("WARNING: Orphaned comments may not belong to your videos!")
+    print("They could be replies to other comments or from different videos.")
+    print("Reassignment based on semantic similarity may introduce noise.")
+    print("Consider reviewing USAGE.md for important caveats before proceeding.")
+    print()
+    print("Recommended settings to avoid contamination:")
+    print("  - SEMANTIC_SIMILARITY_THRESHOLD=0.85 (high confidence)")
+    print("  - SKIP_REASSIGNED_IN_ANALYTICS=true (exclude from analysis)")
+    print()
+
+    if not args.no_prompt:
+        input("Press Enter to continue or Ctrl+C to cancel...")
+        print()
 
     try:
         # Validate config

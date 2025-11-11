@@ -135,7 +135,7 @@ python step2.5_reassign_orphaned.py intermediate/
 - Attempts to recover orphaned comments by reassigning them to videos
 - Uses 3-pass hybrid approach:
   1. Pattern matching on parent IDs
-  2. Semantic similarity with threshold 0.7
+  2. Semantic similarity with threshold 0.85
   3. Creates "Unassigned" virtual video for remaining
 - Analyzes parent ID patterns
 - Embeds orphaned comments for similarity matching
@@ -144,11 +144,33 @@ python step2.5_reassign_orphaned.py intermediate/
 **Output:**
 - `intermediate/step2.5_videos_reassigned.pkl` - Videos with reassigned comments
 
-**Important Notes:**
-- This is an OPTIONAL step that can recover ~30% of lost data
-- Makes OpenAI API calls if semantic matching is enabled
-- Can be skipped with `--skip-similarity` flag for pattern-only matching
-- Step 3 automatically detects if step 2.5 was run
+**IMPORTANT WARNINGS:**
+
+**⚠️ Risk of Data Contamination:**
+Orphaned comments are comments where the `parent_id` doesn't match any of your 5 video IDs. They could be:
+1. **Replies to OTHER comments** (not top-level video comments)
+2. **Comments on DIFFERENT videos** not in your dataset
+3. **Data extraction errors or ID mismatches**
+
+**Reassigning them based on semantic similarity WILL introduce noise** because they may genuinely belong to completely different contexts or videos outside your dataset!
+
+**⚠️ Use With Extreme Caution:**
+- Only use if you're confident orphaned comments are genuinely related to your videos
+- High similarity threshold (0.85) reduces false positives but doesn't eliminate them
+- Reassigned comments are tagged with `metadata['reassigned']` for filtering
+- By default, reassigned comments are EXCLUDED from analytics (see config below)
+- Consider analyzing original comments only for accurate insights
+
+**When to Use:**
+- ✅ Small, controlled dataset where you know all comments are related
+- ✅ Exploratory analysis where some noise is acceptable
+- ❌ Production analytics requiring high accuracy
+- ❌ When orphaned comments likely belong to external videos
+
+**Performance Note:**
+- Can take 5-15 minutes for large datasets (1,954 orphaned × 5 videos × ~700 comments each)
+- Makes OpenAI API calls for embedding orphaned comments
+- Use `--skip-similarity` flag for pattern-only matching (faster, no API costs)
 
 **Reassignment Report:**
 ```
@@ -231,10 +253,36 @@ Saved to: intermediate/step2.5_videos_reassigned.pkl
 ```
 
 **Configuration Options:**
-- `ENABLE_ORPHAN_REASSIGNMENT=true` - Enable/disable feature
-- `SEMANTIC_SIMILARITY_THRESHOLD=0.7` - Minimum similarity for reassignment
-- `CREATE_UNASSIGNED_VIDEO=true` - Create virtual video for unassigned
-- `SKIP_UNASSIGNED_IN_ANALYTICS=false` - Skip UNASSIGNED video in analytics
+```bash
+# Enable/disable orphan reassignment
+ENABLE_ORPHAN_REASSIGNMENT=true
+
+# Minimum cosine similarity for reassignment (0.85 = high confidence, reduces false positives)
+SEMANTIC_SIMILARITY_THRESHOLD=0.85
+
+# Create virtual UNASSIGNED video for remaining orphaned comments
+CREATE_UNASSIGNED_VIDEO=true
+
+# Skip reassigned comments in analytics (RECOMMENDED to avoid noise)
+SKIP_REASSIGNED_IN_ANALYTICS=true
+
+# Skip UNASSIGNED virtual video in analytics
+SKIP_UNASSIGNED_IN_ANALYTICS=true
+```
+
+**Metadata Tracking:**
+All reassigned comments are tagged with `metadata['reassigned']` field:
+- `'pattern_exact'` - Matched by exact parent ID
+- `'pattern_substring'` - Matched by substring pattern
+- `'pattern_url'` - Matched by extracting video ID from URL
+- `'semantic'` - Matched by semantic similarity (includes `similarity_score`)
+- `'unassigned'` - No match found, placed in UNASSIGNED group
+
+This allows you to:
+- Filter out reassigned comments in custom analysis
+- Identify which comments may be noisy
+- Compare analytics with/without reassigned comments
+- Audit reassignment quality by checking similarity scores
 
 ### Step 3: Generate Embeddings
 
