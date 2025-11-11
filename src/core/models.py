@@ -581,7 +581,13 @@ class ProcessingMetadata:
         total_duration: Total processing time in seconds
         input_file: Path to input CSV
         videos_processed: Number of videos analyzed
-        total_comments: Total number of comments
+        total_comments: Total number of comments processed
+        orphaned_comments: Number of comments without parent videos
+        orphaned_recovered: Number of orphaned comments reassigned
+        orphaned_by_pattern: Number reassigned by pattern matching
+        orphaned_by_similarity: Number reassigned by semantic similarity
+        orphaned_unassigned: Number remaining unassigned
+        recovery_rate: Percentage of orphaned comments recovered
         api_calls_made: Total API calls
         api_cost_estimate: Estimated cost in USD
         errors_encountered: List of errors
@@ -597,6 +603,12 @@ class ProcessingMetadata:
         total_duration: float = 0.0,
         videos_processed: int = 0,
         total_comments: int = 0,
+        orphaned_comments: int = 0,
+        orphaned_recovered: int = 0,
+        orphaned_by_pattern: int = 0,
+        orphaned_by_similarity: int = 0,
+        orphaned_unassigned: int = 0,
+        recovery_rate: float = 0.0,
         api_calls_made: int = 0,
         api_cost_estimate: float = 0.0,
         errors_encountered: Optional[List[Dict[str, Any]]] = None,
@@ -610,6 +622,12 @@ class ProcessingMetadata:
         self.input_file = input_file
         self.videos_processed = videos_processed
         self.total_comments = total_comments
+        self.orphaned_comments = orphaned_comments
+        self.orphaned_recovered = orphaned_recovered
+        self.orphaned_by_pattern = orphaned_by_pattern
+        self.orphaned_by_similarity = orphaned_by_similarity
+        self.orphaned_unassigned = orphaned_unassigned
+        self.recovery_rate = recovery_rate
         self.api_calls_made = api_calls_made
         self.api_cost_estimate = api_cost_estimate
         self.errors_encountered = errors_encountered or []
@@ -622,7 +640,7 @@ class ProcessingMetadata:
         Returns:
             Dictionary representation
         """
-        return {
+        result = {
             "run_id": self.run_id,
             "start_time": self.start_time.isoformat() if self.start_time else None,
             "end_time": self.end_time.isoformat() if self.end_time else None,
@@ -630,11 +648,25 @@ class ProcessingMetadata:
             "input_file": self.input_file,
             "videos_processed": self.videos_processed,
             "total_comments": self.total_comments,
+            "orphaned_comments": self.orphaned_comments,
             "api_calls_made": self.api_calls_made,
             "api_cost_estimate": round(self.api_cost_estimate, 2),
             "errors": self.errors_encountered,
             "warnings": self.warnings
         }
+
+        # Add reassignment stats if any orphaned comments were found
+        if self.orphaned_comments > 0:
+            result["orphaned_recovery"] = {
+                "total_orphaned": self.orphaned_comments,
+                "recovered": self.orphaned_recovered,
+                "recovered_by_pattern": self.orphaned_by_pattern,
+                "recovered_by_similarity": self.orphaned_by_similarity,
+                "unassigned": self.orphaned_unassigned,
+                "recovery_rate": round(self.recovery_rate, 3)
+            }
+
+        return result
 
     def save(self, path: str) -> None:
         """

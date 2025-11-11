@@ -45,21 +45,49 @@ def main():
         # Validate config
         Config.validate()
 
-        # Load videos from step 2
-        input_file = os.path.join(args.data_dir, "step2_videos.pkl")
-        if not os.path.exists(input_file):
-            print(f"Error: Input file not found: {input_file}")
+        # Load videos - check for step 2.5 output first, fallback to step 2
+        step2_5_file = os.path.join(args.data_dir, "step2.5_videos_reassigned.pkl")
+        step2_file = os.path.join(args.data_dir, "step2_videos.pkl")
+
+        if os.path.exists(step2_5_file):
+            input_file = step2_5_file
+            used_reassignment = True
+            print(f"Loading videos from: {input_file} (with orphan reassignment)")
+        elif os.path.exists(step2_file):
+            input_file = step2_file
+            used_reassignment = False
+            print(f"Loading videos from: {input_file}")
+            print("Note: Step 2.5 (orphan reassignment) was not run")
+            print("      Run step2.5_reassign_orphaned.py to recover orphaned comments")
+        else:
+            print(f"Error: No input file found")
+            print(f"  Tried: {step2_5_file}")
+            print(f"  Tried: {step2_file}")
             print("Run step2_discover_videos.py first")
             return 1
 
-        print(f"Loading videos from: {input_file}")
         with open(input_file, 'rb') as f:
             data = pickle.load(f)
             videos: List[Video] = data['videos']
-        print(f"✓ Loaded {len(videos)} videos")
+            orphaned = data.get('orphaned', [])
+
+        print(f"Loaded {len(videos)} videos")
 
         total_comments = sum(len(v.comments) for v in videos)
-        print(f"✓ Total comments to embed: {total_comments}")
+        print(f"Total comments to embed: {total_comments}")
+
+        if used_reassignment:
+            reassignment_stats = data.get('reassignment_stats', {})
+            if reassignment_stats:
+                print(f"Orphan recovery stats:")
+                print(f"  - Recovered: {reassignment_stats.get('recovered_by_pattern', 0) + reassignment_stats.get('recovered_by_similarity', 0)}")
+                print(f"  - By pattern: {reassignment_stats.get('recovered_by_pattern', 0)}")
+                print(f"  - By similarity: {reassignment_stats.get('recovered_by_similarity', 0)}")
+                print(f"  - Unassigned: {reassignment_stats.get('unassigned', 0)}")
+        elif orphaned:
+            print(f"Found {len(orphaned)} orphaned comments (not processed)")
+            print("  Consider running step2.5_reassign_orphaned.py to recover them")
+
         print()
 
         # Initialize AI components
@@ -101,21 +129,23 @@ def main():
         print(f"\n✓ Total embeddings generated: {total_embedded}/{total_comments}")
 
         # Save cache statistics
-        cache_stats = cache_manager.get_statistics()
-        print(f"✓ Cache hits: {cache_stats.get('hits', 0)}")
-        print(f"✓ Cache misses: {cache_stats.get('misses', 0)}")
+        cache_stats = cache_manager.get_cache_stats()
+        print(f"Cache hits: {cache_stats.get('cache_hits', 0)}")
+        print(f"Cache misses: {cache_stats.get('cache_misses', 0)}")
         print()
 
         # Save intermediate state
         output_file = os.path.join(args.data_dir, "step3_videos_embedded.pkl")
         with open(output_file, 'wb') as f:
-            pickle.dump({'videos': videos}, f)
+            pickle.dump({'videos': videos, 'orphaned': orphaned}, f)
         print(f"✓ Saved to: {output_file}")
+        if orphaned:
+            print(f"  (preserved {len(orphaned)} orphaned comments for reference)")
 
         # Save embeddings cache
-        cache_file = os.path.join(args.data_dir, "embeddings_cache.pkl")
-        cache_manager.save_cache(cache_file)
-        print(f"✓ Saved cache to: {cache_file}")
+        cache_manager.save_cache()
+        cache_stats = cache_manager.get_cache_stats()
+        print(f"Saved cache to: {cache_stats['cache_file']} ({cache_stats.get('cache_size_mb', 0)} MB)")
         print()
 
         print("=" * 70)

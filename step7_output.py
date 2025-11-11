@@ -58,8 +58,11 @@ def main():
             data = pickle.load(f)
             videos: List[Video] = data['videos']
             analytics: Dict[str, AnalyticsResult] = data['analytics']
+            orphaned = data.get('orphaned', [])
         print(f"✓ Loaded {len(videos)} videos")
         print(f"✓ Loaded analytics for {len(analytics)} videos")
+        if orphaned:
+            print(f"Note: {len(orphaned)} orphaned comments were excluded from analysis")
         print()
 
         # Initialize output components
@@ -83,7 +86,8 @@ def main():
             end_time=end_time,
             total_duration=0.0,  # Unknown for modular execution
             videos_processed=len(videos),
-            total_comments=sum(len(v.comments) for v in videos)
+            total_comments=sum(len(v.comments) for v in videos),
+            orphaned_comments=len(orphaned)
         )
 
         # Save results

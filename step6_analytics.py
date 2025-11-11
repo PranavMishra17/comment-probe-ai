@@ -59,6 +59,7 @@ def main():
             data = pickle.load(f)
             videos: List[Video] = data['videos']
             search_results: Dict = data['search_results']
+            orphaned = data.get('orphaned', [])
         print(f"✓ Loaded {len(videos)} videos")
         print()
 
@@ -138,7 +139,7 @@ def main():
         # Save intermediate state
         output_file = os.path.join(args.data_dir, "step6_analytics.pkl")
         with open(output_file, 'wb') as f:
-            pickle.dump({'videos': videos, 'analytics': analytics}, f)
+            pickle.dump({'videos': videos, 'analytics': analytics, 'orphaned': orphaned}, f)
         print(f"✓ Saved to: {output_file}")
         print()
 

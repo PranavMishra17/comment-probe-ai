@@ -77,7 +77,7 @@ def main():
             print(f"{i}. Video ID: {video.id}")
             print(f"   URL: {video.url}")
             print(f"   Comments: {len(video.comments)}")
-            print(f"   Title: {video.title[:60] if video.title else 'N/A'}...")
+            print(f"   Title: {video.content[:60] if video.content else 'N/A'}...")
             print()
 
         # Save intermediate state

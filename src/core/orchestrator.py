@@ -14,6 +14,7 @@ from src.data.loader import CSVLoader
 from src.data.validator import DataValidator
 from src.data.cleaner import DataCleaner
 from src.data.video_discoverer import VideoDiscoverer
+from src.data.orphaned_reassigner import OrphanedCommentReassigner
 from src.ai.openai_client import OpenAIClient
 from src.ai.embedder import Embedder
 from src.ai.hypothesis_generator import HypothesisGenerator
@@ -63,6 +64,11 @@ class Orchestrator:
         self.validator = DataValidator()
         self.cleaner = DataCleaner()
         self.video_discoverer = VideoDiscoverer()
+        self.orphaned_reassigner = OrphanedCommentReassigner(
+            embedder=self.embedder,
+            similarity_threshold=config.SEMANTIC_SIMILARITY_THRESHOLD,
+            create_unassigned_video=config.CREATE_UNASSIGNED_VIDEO
+        ) if config.ENABLE_ORPHAN_REASSIGNMENT else None
 
         # Initialize analytics
         self.sentiment_analyzer = SentimentAnalyzer(self.openai_client)
@@ -111,6 +117,13 @@ class Orchestrator:
 
             # Phase 2: Discover Videos
             videos, orphaned = self._discover_videos(comments)
+            logger.info(f"[Orchestrator] Found {len(orphaned)} orphaned comments")
+
+            # Phase 2.5: Reassign Orphaned Comments (if enabled)
+            reassignment_stats = {}
+            if orphaned and self.orphaned_reassigner:
+                videos, reassignment_stats = self._reassign_orphaned_comments(videos, orphaned)
+                orphaned = []  # All orphaned have been processed
 
             # Phase 3: Generate Embeddings
             self._generate_embeddings(videos)
@@ -130,6 +143,12 @@ class Orchestrator:
             metadata.total_duration = (end_time - start_time).total_seconds()
             metadata.videos_processed = len(videos)
             metadata.total_comments = sum(len(v.comments) for v in videos)
+            metadata.orphaned_comments = reassignment_stats.get('total_orphaned', 0)
+            metadata.orphaned_recovered = reassignment_stats.get('recovered_by_pattern', 0) + reassignment_stats.get('recovered_by_similarity', 0)
+            metadata.orphaned_by_pattern = reassignment_stats.get('recovered_by_pattern', 0)
+            metadata.orphaned_by_similarity = reassignment_stats.get('recovered_by_similarity', 0)
+            metadata.orphaned_unassigned = reassignment_stats.get('unassigned', 0)
+            metadata.recovery_rate = reassignment_stats.get('recovery_rate', 0.0)
 
             self._save_outputs(videos, analytics, metadata)
 
@@ -178,6 +197,25 @@ class Orchestrator:
 
         logger.info(f"[Orchestrator] Phase 2 complete - {len(videos)} videos")
         return videos, orphaned
+
+    def _reassign_orphaned_comments(
+        self,
+        videos: List[Video],
+        orphaned: List[Comment]
+    ) -> Tuple[List[Video], Dict]:
+        """Phase 2.5: Reassign orphaned comments to videos."""
+        logger.info(f"[Orchestrator] Phase 2.5: Reassigning {len(orphaned)} orphaned comments")
+
+        videos_updated, stats = self.orphaned_reassigner.reassign_comments(videos, orphaned)
+
+        logger.info(
+            f"[Orchestrator] Phase 2.5 complete - "
+            f"Recovered: {stats['recovered_by_pattern'] + stats['recovered_by_similarity']}, "
+            f"Unassigned: {stats['unassigned']}, "
+            f"Recovery rate: {stats['recovery_rate']:.1%}"
+        )
+
+        return videos_updated, stats
 
     def _generate_embeddings(self, videos: List[Video]) -> None:
         """Phase 3: Generate embeddings for all comments."""

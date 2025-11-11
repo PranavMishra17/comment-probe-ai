@@ -125,6 +125,117 @@ Video Summary:
    ...
 ```
 
+### Step 2.5: Reassign Orphaned Comments (Optional)
+
+```bash
+python step2.5_reassign_orphaned.py intermediate/
+```
+
+**What it does:**
+- Attempts to recover orphaned comments by reassigning them to videos
+- Uses 3-pass hybrid approach:
+  1. Pattern matching on parent IDs
+  2. Semantic similarity with threshold 0.7
+  3. Creates "Unassigned" virtual video for remaining
+- Analyzes parent ID patterns
+- Embeds orphaned comments for similarity matching
+- Tracks reassignment statistics
+
+**Output:**
+- `intermediate/step2.5_videos_reassigned.pkl` - Videos with reassigned comments
+
+**Important Notes:**
+- This is an OPTIONAL step that can recover ~30% of lost data
+- Makes OpenAI API calls if semantic matching is enabled
+- Can be skipped with `--skip-similarity` flag for pattern-only matching
+- Step 3 automatically detects if step 2.5 was run
+
+**Reassignment Report:**
+```
+STEP 2.5: REASSIGN ORPHANED COMMENTS (OPTIONAL)
+
+Loaded 5 videos
+Found 1954 orphaned comments
+
+Initializing AI components for semantic matching...
+Components initialized
+
+Starting reassignment process...
+======================================================================
+
+[OrphanedCommentReassigner] Analyzing 1954 orphaned comments
+[OrphanedCommentReassigner] Found 45 unique parent IDs
+
+Pass 1: Pattern matching
+[OrphanedCommentReassigner] Pattern matching: Recovered 234/1954 comments
+  - Video FqIMu4C87SM: +89 comments
+  - Video ubSE4me-sE8: +67 comments
+  - Video rdMyaxhWQ8k: +78 comments
+
+Pass 2: Semantic similarity matching
+[OrphanedCommentReassigner] Embedding 1720 orphaned comments
+[OrphanedCommentReassigner] Similarity matching: Recovered 1356/1720 comments
+  - Video FqIMu4C87SM: +312 comments (avg similarity: 0.782)
+  - Video ubSE4me-sE8: +289 comments (avg similarity: 0.754)
+  - Video rdMyaxhWQ8k: +445 comments (avg similarity: 0.791)
+  - Video YKbDApzT1iw: +298 comments (avg similarity: 0.768)
+  - Video 2yyCnKcSrUg: +12 comments (avg similarity: 0.723)
+
+Pass 3: Creating unassigned group
+[OrphanedCommentReassigner] Created unassigned video with 364 comments
+
+======================================================================
+
+Reassignment Summary:
+----------------------------------------------------------------------
+Total orphaned comments: 1954
+Recovered by pattern matching: 234
+Recovered by semantic similarity: 1356
+Remaining unassigned: 364
+Recovery rate: 81.4%
+
+Updated Video Summary:
+----------------------------------------------------------------------
+1. Video ID: FqIMu4C87SM
+   Total comments: 977
+   Original: 576
+   Reassigned: 401
+
+2. Video ID: ubSE4me-sE8
+   Total comments: 867
+   Original: 511
+   Reassigned: 356
+
+3. Video ID: rdMyaxhWQ8k
+   Total comments: 1875
+   Original: 1352
+   Reassigned: 523
+
+4. Video ID: YKbDApzT1iw
+   Total comments: 1886
+   Original: 1588
+   Reassigned: 298
+
+5. Video ID: 2yyCnKcSrUg
+   Total comments: 173
+   Original: 161
+   Reassigned: 12
+
+6. Video ID: UNASSIGNED
+   Total comments: 364
+   Original: 0
+   Reassigned: 364
+   [VIRTUAL: Unassigned Comments Group]
+
+Saved to: intermediate/step2.5_videos_reassigned.pkl
+```
+
+**Configuration Options:**
+- `ENABLE_ORPHAN_REASSIGNMENT=true` - Enable/disable feature
+- `SEMANTIC_SIMILARITY_THRESHOLD=0.7` - Minimum similarity for reassignment
+- `CREATE_UNASSIGNED_VIDEO=true` - Create virtual video for unassigned
+- `SKIP_UNASSIGNED_IN_ANALYTICS=false` - Skip UNASSIGNED video in analytics
+
 ### Step 3: Generate Embeddings
 
 ```bash

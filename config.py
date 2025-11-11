@@ -54,6 +54,12 @@ class Config:
     ENABLE_CACHING: bool = os.getenv('ENABLE_CACHING', 'true').lower() == 'true'
     CACHE_DIR: str = os.getenv('CACHE_DIR', './cache')
 
+    # Orphaned Comment Reassignment Configuration
+    ENABLE_ORPHAN_REASSIGNMENT: bool = os.getenv('ENABLE_ORPHAN_REASSIGNMENT', 'true').lower() == 'true'
+    SEMANTIC_SIMILARITY_THRESHOLD: float = float(os.getenv('SEMANTIC_SIMILARITY_THRESHOLD', '0.7'))
+    CREATE_UNASSIGNED_VIDEO: bool = os.getenv('CREATE_UNASSIGNED_VIDEO', 'true').lower() == 'true'
+    SKIP_UNASSIGNED_IN_ANALYTICS: bool = os.getenv('SKIP_UNASSIGNED_IN_ANALYTICS', 'false').lower() == 'true'
+
     # Output Configuration
     OUTPUT_BASE_DIR: str = os.getenv('OUTPUT_BASE_DIR', './output')
     RESULTS_FILENAME: str = os.getenv('RESULTS_FILENAME', 'results.json')
@@ -140,6 +146,9 @@ class Config:
 
         if cls.API_TIMEOUT <= 0:
             raise ConfigException(f"API_TIMEOUT must be positive, got {cls.API_TIMEOUT}")
+
+        if cls.SEMANTIC_SIMILARITY_THRESHOLD < 0 or cls.SEMANTIC_SIMILARITY_THRESHOLD > 1:
+            raise ConfigException(f"SEMANTIC_SIMILARITY_THRESHOLD must be between 0 and 1, got {cls.SEMANTIC_SIMILARITY_THRESHOLD}")
 
         return True
 
