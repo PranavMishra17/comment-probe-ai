@@ -1,6 +1,6 @@
 # YouTube Comments Analysis System - Assessment Project
 
-[![Test Installation](https://github.com/YOUR_USERNAME/comment-probe-ai/actions/workflows/test.yml/badge.svg)](https://github.com/PranavMishra17/comment-probe-ai/actions/workflows/test.yml)
+[![Test Installation](https://github.com/PranavMishra17/comment-probe-ai/actions/workflows/test.yml/badge.svg)](https://github.com/PranavMishra17/comment-probe-ai/actions/workflows/test.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -513,7 +513,7 @@ See LICENSE file.
 <table align="center">
 <tr>
 <td width="200px">
-  <img src="static/images/me.png" alt="Pranav Mishra" width="180" style="border: 5px solid; border-image: linear-gradient(45deg, #9d4edd, #ff006e) 1;">
+  <img src="static/me.png" alt="Pranav Mishra" width="180" style="border: 5px solid; border-image: linear-gradient(45deg, #9d4edd, #ff006e) 1;">
 </td>
 <td>
   
