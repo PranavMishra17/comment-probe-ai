@@ -513,7 +513,7 @@ See LICENSE file.
 <table align="center">
 <tr>
 <td width="200px">
-  <img src="static/me.png" alt="Pranav Mishra" width="180" style="border: 5px solid; border-image: linear-gradient(45deg, #9d4edd, #ff006e) 1;">
+  <img src="static/me.jpg" alt="Pranav Mishra" width="180" style="border: 5px solid; border-image: linear-gradient(45deg, #9d4edd, #ff006e) 1;">
 </td>
 <td>
   
