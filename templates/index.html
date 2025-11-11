@@ -9,48 +9,114 @@
 <body>
     <div class="container">
         <header>
-            <h1>COMMENT PROBE AI</h1>
-            <div style="color: #fff; font-size: 14px; margin-top: 10px;">
-                INTERACTIVE ANALYSIS VIEWER
+            <div class="header-left">
+                <div class="icon-with-label">
+                    <a href="https://github.com/PranavMishra17/comment-probe-ai/" target="_blank" class="github-link">
+                        <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                    </a>
+                    <span class="icon-label">View on GitHub</span>
+                </div>
+            </div>
+            <div class="header-center">
+                <h1>COMMENT PROBE AI</h1>
+                <div class="subtitle">INTERACTIVE ANALYSIS VIEWER</div>
+            </div>
+            <div class="header-right">
+                <div class="icon-with-label icon-with-label-left">
+                    <span class="icon-label">View more of my work</span>
+                    <a href="https://portfolio-pranav-mishra-paranoid.vercel.app" target="_blank" class="portfolio-link">
+                        <img src="/static/me.jpg" alt="Portfolio" class="avatar">
+                    </a>
+                </div>
             </div>
         </header>
 
-        <div class="controls">
-            <div class="control-row">
-                <label for="run-select">SELECT RUN:</label>
-                <select id="run-select">
-                    <option value="">Loading runs...</option>
-                </select>
-                <button id="load-btn" disabled>LOAD ANALYSIS</button>
-            </div>
-            <div class="control-row">
-                <label for="search-input">SEARCH:</label>
-                <input type="text" id="search-input" placeholder="Search comments, topics, questions..." disabled>
-                <button id="search-btn" disabled>SEARCH</button>
-                <button id="clear-search-btn" disabled>CLEAR</button>
-            </div>
-            <div id="video-filters" class="video-filter" style="display: none;">
-                <label style="width: 100%;">FILTER BY VIDEO:</label>
-            </div>
+        <div class="tabs">
+            <button class="tab-btn" data-tab="algorithm">
+                ALGORITHM OVERVIEW
+                <span class="tab-close" onclick="closeTab(event, 'algorithm')">×</span>
+            </button>
+            <button class="tab-btn" data-tab="search">
+                SEARCH COMMENTS
+                <span class="tab-close" onclick="closeTab(event, 'search')">×</span>
+            </button>
+            <button class="tab-btn" data-tab="results">
+                ANALYSIS RESULTS
+                <span class="tab-close" onclick="closeTab(event, 'results')">×</span>
+            </button>
         </div>
 
         <div id="loading" class="loading" style="display: none;">LOADING ANALYSIS...</div>
         <div id="error" class="error" style="display: none;"></div>
 
-        <div id="search-results">
-            <h2>SEARCH RESULTS</h2>
+        <!-- Home Screen (default view) -->
+        <div id="home-screen" class="home-screen">
+            <div class="home-content">
+                <h2>WELCOME TO COMMENT PROBE AI</h2>
+                <p class="home-subtitle"><strong>AI-Powered YouTube Comment Analysis System</strong></p>
+                <p class="home-brief">This tool analyzes YouTube comments using advanced NLP and LLM techniques to extract insights, identify topics, and understand sentiment.</p>
+                <img src="/static/home.png" alt="Comment Probe AI" class="home-logo" onerror="this.style.display='none'">
+                <div class="home-description">
+                    <br>
+                    <p><strong>Key Features:</strong></p>
+                    <ul>
+                        <li>Semantic search across thousands of comments using OpenAI embeddings</li>
+                        <li>Automated topic clustering and extraction</li>
+                        <li>Sentiment analysis with detailed distribution metrics</li>
+                        <li>Question identification and categorization</li>
+                        <li>Interactive visualization and search interface</li>
+                    </ul>
+                    <br>
+                    <p><strong>Get Started:</strong></p>
+                    <p>Click on any of the tabs above to explore:</p>
+                    <ul>
+                        <li><strong>ALGORITHM OVERVIEW</strong> - Understand the 7-step processing pipeline</li>
+                        <li><strong>SEARCH COMMENTS</strong> - Search and filter through analyzed comments</li>
+                        <li><strong>ANALYSIS RESULTS</strong> - View detailed analytics for each video</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-algorithm" style="display: none;">
+            <h2>ALGORITHM OVERVIEW</h2>
+            <div id="algorithm-steps"></div>
+        </div>
+
+        <div class="tab-content" id="tab-search" style="display: none;">
+            <h2>SEARCH COMMENTS</h2>
+            <div class="warning-box" id="search-warning">
+                <strong>⚠ SEARCH INACTIVE</strong><br>
+                Please load a run/session from the <strong>ANALYSIS RESULTS</strong> tab first to enable search functionality.
+            </div>
+            <div class="search-panel">
+                <div class="search-row">
+                    <input type="text" id="search-input" placeholder="Search comments, topics, questions..." disabled>
+                    <button id="search-btn" disabled>SEARCH</button>
+                    <button id="clear-search-btn" disabled>CLEAR</button>
+                </div>
+                <div id="video-filters" class="video-filter" style="display: none;">
+                    <label>FILTER BY VIDEO:</label>
+                </div>
+            </div>
             <div id="search-results-container"></div>
         </div>
 
-        <section id="algorithm-section">
-            <h2>ALGORITHM OVERVIEW</h2>
-            <div id="algorithm-steps"></div>
-        </section>
-
-        <section id="results-section">
+        <div class="tab-content" id="tab-results" style="display: none;">
             <h2>ANALYSIS RESULTS</h2>
+            <div class="controls">
+                <div class="control-row">
+                    <label for="run-select">SELECT RUN:</label>
+                    <select id="run-select">
+                        <option value="">Loading runs...</option>
+                    </select>
+                    <button id="load-btn" disabled>LOAD ANALYSIS</button>
+                </div>
+            </div>
             <div id="videos-container"></div>
-        </section>
+        </div>
     </div>
 
     <script src="/static/app.js"></script>

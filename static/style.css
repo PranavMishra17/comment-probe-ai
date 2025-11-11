@@ -9,6 +9,7 @@ body {
     background: #fff;
     color: #000;
     line-height: 1.6;
+    font-weight: 600;
 }
 
 .container {
@@ -17,23 +18,112 @@ body {
     padding: 20px;
 }
 
+/* Header with left/center/right layout */
 header {
     background: #000;
-    color: #ffeb3b;
+    color: #FFF59D;
     padding: 30px;
-    text-align: center;
     border: 4px solid #000;
     margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-header h1 {
+.header-left,
+.header-right {
+    flex: 0 0 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
+.header-center h1 {
     font-size: 48px;
     font-weight: bold;
     letter-spacing: 4px;
+    margin: 0;
 }
 
+.subtitle {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #FFB6C1;
+    margin-top: 5px;
+}
+
+/* Icon with label container */
+.icon-with-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.icon-label {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.3s, transform 0.3s;
+    font-size: 12px;
+    font-weight: 700;
+    color: #FFF59D;
+    white-space: nowrap;
+}
+
+.icon-with-label:hover .icon-label {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Icon with label on left (for portfolio) */
+.icon-with-label-left .icon-label {
+    transform: translateX(10px);
+}
+
+.icon-with-label-left:hover .icon-label {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* GitHub icon link */
+.github-link {
+    display: inline-block;
+    color: #fff;
+    transition: transform 0.3s;
+}
+
+.github-link:hover {
+    transform: scale(1.2);
+}
+
+/* Portfolio avatar */
+.portfolio-link {
+    display: inline-block;
+    position: relative;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border: 3px solid #FFF59D;
+    border-radius: 0;
+    transition: border-color 0.3s, transform 0.3s;
+}
+
+.avatar:hover {
+    border-color: #FFB6C1;
+    transform: scale(1.2);
+}
+
+/* Controls section */
 .controls {
-    background: #ffeb3b;
+    background: #FFF59D;
     border: 4px solid #000;
     padding: 20px;
     margin-bottom: 30px;
@@ -52,7 +142,8 @@ header h1 {
 
 label {
     font-weight: bold;
-    min-width: 100px;
+    min-width: 120px;
+    font-weight: 700;
 }
 
 select, input[type="text"] {
@@ -62,22 +153,24 @@ select, input[type="text"] {
     padding: 10px;
     border: 3px solid #000;
     background: #fff;
-    font-weight: bold;
+    font-weight: 600;
 }
 
+/* Buttons */
 button {
     font-family: 'Courier New', monospace;
     font-size: 14px;
     padding: 10px 20px;
     border: 3px solid #000;
     background: #000;
-    color: #ffeb3b;
-    font-weight: bold;
+    color: #FFF59D;
+    font-weight: 700;
     cursor: pointer;
+    transition: background 0.3s, color 0.3s;
 }
 
 button:hover {
-    background: #ffeb3b;
+    background: #FFB6C1;
     color: #000;
 }
 
@@ -87,19 +180,140 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* Tab navigation */
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 4px solid #000;
+    padding-bottom: 0;
+}
+
+.tab-btn {
+    background: #fff;
+    color: #000;
+    border: 3px solid #000;
+    border-bottom: none;
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.tab-btn:hover {
+    background: #FFF59D;
+    color: #000;
+}
+
+.tab-btn.active {
+    background: #000;
+    color: #FFF59D;
+}
+
+.tab-close {
+    font-size: 24px;
+    font-weight: 700;
+    padding: 0 5px;
+    transition: color 0.3s;
+}
+
+.tab-close:hover {
+    color: #FF00FF;
+}
+
+.tab-btn.active .tab-close:hover {
+    color: #FFB6C1;
+}
+
+.tab-content {
+    display: none;
+}
+
+/* Home Screen */
+.home-screen {
+    display: block;
+    text-align: center;
+    padding: 60px 40px;
+    border: 4px solid #000;
+    background: #fff;
+    margin-bottom: 30px;
+}
+
+.home-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.home-logo {
+    width: 100%;
+    max-width: 900px;
+    height: auto;
+    margin: 30px 0;
+    border: none;
+}
+
+.home-screen h2 {
+    background: none;
+    border: none;
+    margin: 20px 0 15px;
+    font-size: 32px;
+    letter-spacing: 3px;
+}
+
+.home-subtitle {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.home-brief {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 10px 0 20px;
+    line-height: 1.6;
+}
+
+.home-description {
+    text-align: left;
+    font-weight: 600;
+    line-height: 1.8;
+    margin-top: 30px;
+}
+
+.home-description p {
+    margin: 10px 0;
+}
+
+.home-description ul {
+    margin: 10px 0 10px 30px;
+    list-style: square;
+}
+
+.home-description li {
+    margin: 8px 0;
+}
+
+/* Headings */
 h2 {
-    background: #ffeb3b;
+    background: #FFB6C1;
     color: #000;
     padding: 15px 20px;
     font-size: 24px;
     font-weight: bold;
     border: 4px solid #000;
-    margin: 30px 0 20px;
+    margin: 0 0 20px;
 }
 
 h3 {
     background: #000;
-    color: #ffeb3b;
+    color: #FFF59D;
     padding: 10px 15px;
     font-size: 18px;
     font-weight: bold;
@@ -107,6 +321,39 @@ h3 {
     margin: 20px 0 10px;
 }
 
+/* Algorithm sections */
+.architecture-section,
+.pipeline-section,
+.steps-section {
+    margin: 30px 0;
+}
+
+.architecture-section h3,
+.pipeline-section h3,
+.steps-section h3 {
+    background: #FFB6C1;
+    color: #000;
+    padding: 10px 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 3px solid #000;
+    margin: 20px 0 15px;
+}
+
+.architecture-diagram,
+.pipeline-diagram {
+    background: #fff;
+    border: 3px solid #000;
+    padding: 20px;
+    margin: 10px 0;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 600;
+    color: #000;
+}
+
+/* Algorithm steps */
 .step-box {
     border: 3px solid #000;
     margin: 15px 0;
@@ -114,21 +361,22 @@ h3 {
 }
 
 .step-header {
-    background: #ffeb3b;
+    background: #FFF59D;
     color: #000;
     padding: 15px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 700;
     font-size: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 3px solid #000;
+    transition: background 0.3s, color 0.3s;
 }
 
 .step-header:hover {
-    background: #000;
-    color: #ffeb3b;
+    background: #FFB6C1;
+    color: #000;
 }
 
 .step-toggle {
@@ -149,6 +397,7 @@ h3 {
 
 .step-content p {
     margin: 10px 0;
+    font-weight: 600;
 }
 
 .step-content ul {
@@ -157,8 +406,35 @@ h3 {
 
 .step-content li {
     margin: 5px 0;
+    font-weight: 600;
 }
 
+/* Warning box */
+.warning-box {
+    background: #FFF59D;
+    border: 3px solid #000;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: #000;
+}
+
+/* Search panel */
+.search-panel {
+    background: #fff;
+    border: 3px solid #000;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Video cards */
 .video-card {
     border: 4px solid #000;
     margin: 20px 0;
@@ -167,35 +443,51 @@ h3 {
 
 .video-header {
     background: #000;
-    color: #ffeb3b;
+    color: #FFF59D;
     padding: 15px;
-    font-weight: bold;
+    font-weight: 700;
+}
+
+.video-number {
+    font-size: 12px;
+    color: #FFB6C1;
+    font-weight: 700;
+    margin-bottom: 5px;
 }
 
 .video-title {
-    font-size: 16px;
+    font-size: 18px;
     margin: 5px 0;
+    font-weight: 700;
+    color: #FFF59D;
 }
 
 .video-meta {
     font-size: 12px;
-    color: #fff;
+    color: #FFB6C1;
     margin-top: 5px;
+    font-weight: 600;
+}
+
+.video-meta a {
+    color: #FFB6C1;
+    font-weight: 700;
 }
 
 .video-body {
     padding: 20px;
 }
 
+/* Stats box */
 .stat-box {
     border: 3px solid #000;
     padding: 15px;
     margin: 15px 0;
-    background: #ffeb3b;
+    background: #FFF59D;
 }
 
 .stat-title {
-    font-weight: bold;
+    font-weight: 700;
     font-size: 14px;
     margin-bottom: 10px;
     color: #000;
@@ -223,7 +515,7 @@ h3 {
 
 .dist-label {
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .dist-value {
@@ -232,6 +524,7 @@ h3 {
     margin-top: 5px;
 }
 
+/* Topic, question, and search result items */
 .topic-item, .question-item, .search-result-item {
     border: 3px solid #000;
     padding: 15px;
@@ -240,7 +533,7 @@ h3 {
 }
 
 .topic-header, .question-header, .result-header {
-    font-weight: bold;
+    font-weight: 700;
     font-size: 16px;
     margin-bottom: 10px;
 }
@@ -253,12 +546,12 @@ h3 {
 }
 
 .keyword {
-    background: #ffeb3b;
+    background: #FFB6C1;
     color: #000;
     padding: 5px 10px;
     border: 2px solid #000;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .comment-sample {
@@ -267,28 +560,31 @@ h3 {
     padding: 10px;
     margin: 5px 0;
     font-size: 13px;
+    font-weight: 600;
 }
 
 .relevance {
     color: #666;
     font-size: 11px;
     margin-top: 5px;
+    font-weight: 600;
 }
 
+/* Loading and error states */
 .loading {
     text-align: center;
     padding: 40px;
     font-size: 18px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .error {
-    background: #000;
-    color: #ffeb3b;
+    background: #FF00FF;
+    color: #fff;
     padding: 20px;
     border: 4px solid #000;
     margin: 20px 0;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .empty-state {
@@ -296,6 +592,7 @@ h3 {
     padding: 60px 20px;
     border: 3px solid #000;
     margin: 20px 0;
+    font-weight: 600;
 }
 
 .empty-state-icon {
@@ -303,11 +600,18 @@ h3 {
     margin-bottom: 20px;
 }
 
+/* Video filter chips */
 .video-filter {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin: 15px 0;
+    align-items: center;
+}
+
+.video-filter label {
+    font-weight: 700;
+    margin-right: 10px;
 }
 
 .video-filter-chip {
@@ -316,22 +620,20 @@ h3 {
     padding: 8px 15px;
     cursor: pointer;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 700;
+    transition: background 0.3s;
 }
 
 .video-filter-chip.active {
-    background: #ffeb3b;
+    background: #FFB6C1;
     color: #000;
 }
 
 .video-filter-chip:hover {
-    background: #ffeb3b;
+    background: #FFF59D;
 }
 
-#search-results {
-    display: none;
-}
-
-#search-results.active {
-    display: block;
+/* Search results container */
+#search-results-container {
+    margin-top: 20px;
 }

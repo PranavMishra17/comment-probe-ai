@@ -2,12 +2,14 @@
 let currentRun = null;
 let currentResults = null;
 let selectedVideoFilters = [];
+let videoTitleCache = {}; // Cache for YouTube video titles
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadRuns();
     setupEventListeners();
     renderAlgorithmSteps();
+    setupTabs();
 });
 
 function setupEventListeners() {
@@ -25,6 +27,69 @@ function setupEventListeners() {
             performSearch();
         }
     });
+}
+
+function setupTabs() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Don't trigger if clicking the close button
+            if (e.target.classList.contains('tab-close')) {
+                return;
+            }
+            const tabName = button.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
+}
+
+function switchTab(tabName) {
+    // Hide home screen
+    document.getElementById('home-screen').style.display = 'none';
+
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+    });
+
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Show selected tab
+    const selectedTab = document.getElementById('tab-' + tabName);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+    }
+
+    // Add active class to clicked button
+    const selectedButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (selectedButton) {
+        selectedButton.classList.add('active');
+    }
+}
+
+function closeTab(event, tabName) {
+    event.stopPropagation(); // Prevent tab click event
+
+    // Hide the tab content
+    const tabContent = document.getElementById('tab-' + tabName);
+    if (tabContent) {
+        tabContent.style.display = 'none';
+    }
+
+    // Remove active class from button
+    const button = document.querySelector(`[data-tab="${tabName}"]`);
+    if (button) {
+        button.classList.remove('active');
+    }
+
+    // Show home screen if no tabs are active
+    const anyActive = document.querySelector('.tab-btn.active');
+    if (!anyActive) {
+        document.getElementById('home-screen').style.display = 'block';
+    }
 }
 
 async function loadRuns() {
@@ -68,13 +133,22 @@ async function loadAnalysis() {
 
         currentResults = await response.json();
 
-        renderResults(currentResults);
-        setupVideoFilters(currentResults);
+        await renderResults(currentResults);
+        await setupVideoFilters(currentResults);
 
         // Enable search
         document.getElementById('search-input').disabled = false;
         document.getElementById('search-btn').disabled = false;
         document.getElementById('clear-search-btn').disabled = false;
+
+        // Hide search warning
+        const searchWarning = document.getElementById('search-warning');
+        if (searchWarning) {
+            searchWarning.style.display = 'none';
+        }
+
+        // Switch to results tab
+        switchTab('results');
 
         showLoading(false);
     } catch (error) {
@@ -84,7 +158,7 @@ async function loadAnalysis() {
     }
 }
 
-function setupVideoFilters(results) {
+async function setupVideoFilters(results) {
     const container = document.getElementById('video-filters');
     container.style.display = 'flex';
 
@@ -101,11 +175,17 @@ function setupVideoFilters(results) {
     allChip.addEventListener('click', () => toggleVideoFilter(''));
     container.appendChild(allChip);
 
+    // Fetch titles for all videos
+    const videoTitles = await fetchYouTubeTitles(results.videos);
+
     // Add chip for each video
     results.videos.forEach((video, index) => {
         const chip = document.createElement('div');
         chip.className = 'video-filter-chip';
-        chip.textContent = 'VIDEO ' + (index + 1) + ': ' + video.video_id;
+        const videoTitle = videoTitles[video.video_id] || video.video_id;
+        // Truncate title if too long
+        const displayTitle = videoTitle.length > 40 ? videoTitle.substring(0, 37) + '...' : videoTitle;
+        chip.textContent = 'VIDEO ' + (index + 1) + ': ' + displayTitle;
         chip.dataset.videoId = video.video_id;
         chip.addEventListener('click', () => toggleVideoFilter(video.video_id));
         container.appendChild(chip);
@@ -166,7 +246,7 @@ async function performSearch() {
         if (!response.ok) throw new Error('Search failed');
 
         const results = await response.json();
-        renderSearchResults(results);
+        await renderSearchResults(results);
 
         showLoading(false);
     } catch (error) {
@@ -178,60 +258,100 @@ async function performSearch() {
 
 function clearSearch() {
     document.getElementById('search-input').value = '';
-    document.getElementById('search-results').classList.remove('active');
-    document.getElementById('results-section').style.display = 'block';
-    document.getElementById('algorithm-section').style.display = 'block';
+    document.getElementById('search-results-container').innerHTML = '';
 }
 
-function renderSearchResults(results) {
+async function renderSearchResults(results) {
     const container = document.getElementById('search-results-container');
-    const section = document.getElementById('search-results');
-
-    // Hide main results, show search results
-    document.getElementById('results-section').style.display = 'none';
-    document.getElementById('algorithm-section').style.display = 'none';
-    section.classList.add('active');
 
     if (results.matches.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">�</div><div>NO MATCHES FOUND FOR "' + escapeHtml(results.query) + '"</div></div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">SEARCH</div><div>NO MATCHES FOUND FOR "' + escapeHtml(results.query) + '"</div></div>';
         return;
     }
 
-    let html = '<div style="margin-bottom: 20px; font-weight: bold;">FOUND ' + results.total_matches + ' MATCHES FOR "' + escapeHtml(results.query) + '"</div>';
+    // Get unique video IDs and fetch their titles
+    const uniqueVideoIds = [...new Set(results.matches.map(m => m.video_id))];
+    const videoTitlesMap = {};
+    const idsToFetch = [];
+
+    // Check cache first
+    uniqueVideoIds.forEach(videoId => {
+        if (videoTitleCache[videoId]) {
+            videoTitlesMap[videoId] = videoTitleCache[videoId];
+        } else {
+            idsToFetch.push(videoId);
+        }
+    });
+
+    // Fetch uncached titles
+    if (idsToFetch.length > 0) {
+        await Promise.all(idsToFetch.map(async (videoId) => {
+            try {
+                const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    videoTitlesMap[videoId] = data.title;
+                    videoTitleCache[videoId] = data.title;
+                } else {
+                    videoTitlesMap[videoId] = videoId;
+                    videoTitleCache[videoId] = videoId;
+                }
+            } catch (error) {
+                console.error('Failed to fetch title for', videoId, error);
+                videoTitlesMap[videoId] = videoId;
+                videoTitleCache[videoId] = videoId;
+            }
+        }));
+    }
+
+    let html = '<div style="margin-bottom: 20px; font-weight: 700;">FOUND ' + results.total_matches + ' MATCHES FOR "' + escapeHtml(results.query) + '"</div>';
 
     results.matches.forEach((match, index) => {
+        const videoTitle = videoTitlesMap[match.video_id] || match.video_id;
         html += '<div class="search-result-item">';
-        html += '<div class="result-header">RESULT ' + (index + 1) + ' | VIDEO: ' + escapeHtml(match.video_id) + ' | TYPE: ' + escapeHtml(match.match_type).toUpperCase() + '</div>';
+        html += '<div class="result-header">RESULT ' + (index + 1) + ' | TYPE: ' + escapeHtml(match.match_type).toUpperCase() + '</div>';
+        html += '<div style="margin: 5px 0;"><strong>Video:</strong> ' + escapeHtml(videoTitle) + '</div>';
         if (match.topic_name) html += '<div style="margin: 5px 0;"><strong>Topic:</strong> ' + escapeHtml(match.topic_name) + '</div>';
         if (match.category) html += '<div style="margin: 5px 0;"><strong>Category:</strong> ' + escapeHtml(match.category) + '</div>';
         html += '<div class="comment-sample">' + escapeHtml(match.comment) + '<div class="relevance">Relevance: ' + (match.relevance * 100).toFixed(0) + '%</div></div>';
-        html += '<div style="margin-top: 10px; font-size: 12px;"><a href="' + match.video_url + '" target="_blank" style="color: #000; font-weight: bold;">WATCH ON YOUTUBE �</a></div>';
+        html += '<div style="margin-top: 10px; font-size: 12px;"><a href="' + match.video_url + '" target="_blank" style="color: #FFB6C1; font-weight: 700; text-decoration: underline;">WATCH ON YOUTUBE</a></div>';
         html += '</div>';
     });
 
     container.innerHTML = html;
 }
 
-function renderResults(results) {
+async function renderResults(results) {
     const container = document.getElementById('videos-container');
 
     if (!results.videos || results.videos.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">�</div><div>NO VIDEOS FOUND</div></div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">NO DATA</div><div>NO VIDEOS FOUND</div></div>';
         return;
     }
 
     let html = '';
+
+    // Fetch YouTube titles for all videos
+    const videoTitles = await fetchYouTubeTitles(results.videos);
+
     results.videos.forEach((video, index) => {
         const analytics = video.analytics || {};
         const sentiment = analytics.sentiment || {};
+        const videoId = 'video-' + index;
+        const youtubeTitle = videoTitles[video.video_id] || 'YouTube Video';
 
         html += '<div class="video-card">';
-        html += '<div class="video-header">';
-        html += '<div>VIDEO ' + (index + 1) + ': ' + escapeHtml(video.video_id) + '</div>';
-        html += '<div class="video-title">' + escapeHtml(video.title || '') + '</div>';
-        html += '<div class="video-meta">' + video.comment_count + ' comments | <a href="' + video.url + '" target="_blank" style="color: #ffeb3b;">WATCH ON YOUTUBE</a></div>';
+        html += '<div class="video-header" onclick="toggleVideo(\'' + videoId + '\')" style="cursor: pointer;">';
+        html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+        html += '<div>';
+        html += '<div class="video-number">VIDEO ' + (index + 1) + '</div>';
+        html += '<div class="video-title">' + escapeHtml(youtubeTitle) + '</div>';
+        html += '<div class="video-meta">' + video.comment_count + ' comments | <a href="' + video.url + '" target="_blank" onclick="event.stopPropagation();">WATCH ON YOUTUBE</a></div>';
         html += '</div>';
-        html += '<div class="video-body">';
+        html += '<div class="step-toggle" id="' + videoId + '-toggle">+</div>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="video-body" id="' + videoId + '" style="display: none;">';
         html += renderSentiment(sentiment);
         html += renderTopics(analytics.topics || []);
         html += renderQuestions(analytics.questions || []);
@@ -240,6 +360,46 @@ function renderResults(results) {
     });
 
     container.innerHTML = html;
+}
+
+async function fetchYouTubeTitles(videos) {
+    const titles = {};
+    const videosToFetch = [];
+
+    // Check cache first
+    videos.forEach(video => {
+        const videoId = video.video_id;
+        if (videoTitleCache[videoId]) {
+            titles[videoId] = videoTitleCache[videoId];
+        } else {
+            videosToFetch.push(video);
+        }
+    });
+
+    // Fetch titles for uncached videos in parallel
+    if (videosToFetch.length > 0) {
+        await Promise.all(videosToFetch.map(async (video) => {
+            try {
+                const videoId = video.video_id;
+                const response = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    titles[videoId] = data.title;
+                    videoTitleCache[videoId] = data.title; // Cache it
+                } else {
+                    titles[videoId] = videoId; // Fallback to video ID
+                    videoTitleCache[videoId] = videoId;
+                }
+            } catch (error) {
+                console.error('Failed to fetch title for', video.video_id, error);
+                titles[video.video_id] = video.video_id; // Fallback to video ID
+                videoTitleCache[video.video_id] = video.video_id;
+            }
+        }));
+    }
+
+    return titles;
 }
 
 function renderSentiment(sentiment) {
@@ -304,6 +464,75 @@ function renderQuestions(questions) {
 }
 
 function renderAlgorithmSteps() {
+    const container = document.getElementById('algorithm-steps');
+
+    // System Architecture Diagram
+    let html = '<div class="architecture-section">';
+    html += '<h3>SYSTEM ARCHITECTURE</h3>';
+    html += '<pre class="architecture-diagram">';
+    html += '┌─────────────────────────────────────────────────────────────────┐\n';
+    html += '│                     Flask Application Layer                      │\n';
+    html += '│  ┌──────────┐  ┌─────────────┐  ┌────────────────────────────┐ │\n';
+    html += '│  │  Routes  │──│ Orchestrator│──│     Output Manager         │ │\n';
+    html += '│  │          │  │             │  │                            │ │\n';
+    html += '│  │ /analyze │  │  Workflow   │  │  Results + Visualization   │ │\n';
+    html += '│  │ /status  │  │  Control    │  │  Generation                │ │\n';
+    html += '│  │ /results │  │             │  │                            │ │\n';
+    html += '│  └──────────┘  └──────┬──────┘  └────────┬───────────────────┘ │\n';
+    html += '└────────────────────────┼──────────────────┼─────────────────────┘\n';
+    html += '                         │                  │\n';
+    html += '         ┌───────────────┴──────────────────┴───────────────┐\n';
+    html += '         │           Processing Layer                        │\n';
+    html += '         │                                                    │\n';
+    html += '┌────────▼───────────┐  ┌──────────────┐  ┌────────────────▼─────┐\n';
+    html += '│  Data Pipeline     │  │  AI Engine   │  │  Analytics Engine    │\n';
+    html += '│                    │  │              │  │                      │\n';
+    html += '│ ┌────────────────┐ │  │ ┌──────────┐│  │ ┌──────────────────┐ │\n';
+    html += '│ │ CSVLoader      │ │  │ │ OpenAI   ││  │ │ Sentiment        │ │\n';
+    html += '│ │ DataValidator  │ │  │ │ Client   ││  │ │ Analyzer         │ │\n';
+    html += '│ │ DataCleaner    │ │  │ │          ││  │ │                  │ │\n';
+    html += '│ │ VideoDiscoverer│ │  │ │ Embedder ││  │ │ Topic            │ │\n';
+    html += '│ └────────────────┘ │  │ │          ││  │ │ Extractor        │ │\n';
+    html += '│                    │  │ │ Hypothesis│  │ │                  │ │\n';
+    html += '│                    │  │ │ Generator││  │ │ Question         │ │\n';
+    html += '│                    │  │ │          ││  │ │ Finder           │ │\n';
+    html += '│                    │  │ │ Search   ││  │ └──────────────────┘ │\n';
+    html += '│                    │  │ │ Engine   ││  │                      │\n';
+    html += '│                    │  │ └──────────┘│  │                      │\n';
+    html += '└────────────────────┘  └──────────────┘  └──────────────────────┘\n';
+    html += '         │                      │                    │\n';
+    html += '         └──────────────────────┴────────────────────┘\n';
+    html += '                                │\n';
+    html += '                    ┌───────────▼──────────────┐\n';
+    html += '                    │  Infrastructure Layer    │\n';
+    html += '                    │                          │\n';
+    html += '                    │  ┌────────────────────┐  │\n';
+    html += '                    │  │ CacheManager       │  │\n';
+    html += '                    │  │ Logger             │  │\n';
+    html += '                    │  │ RateLimiter        │  │\n';
+    html += '                    │  │ ErrorHandler       │  │\n';
+    html += '                    │  └────────────────────┘  │\n';
+    html += '                    └──────────────────────────┘\n';
+    html += '</pre>';
+    html += '</div>';
+
+    // Processing Pipeline
+    html += '<div class="pipeline-section">';
+    html += '<h3>7-STEP PROCESSING PIPELINE</h3>';
+    html += '<pre class="pipeline-diagram">';
+    html += '┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐\n';
+    html += '│   STEP 1     │───▶│   STEP 2     │───▶│   STEP 3     │───▶│   STEP 4     │\n';
+    html += '│ Load & Validate  │ Discover Videos│ Gen Embeddings │ Gen Search Specs│\n';
+    html += '└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘\n';
+    html += '                                                                     │\n';
+    html += '                                                                     ▼\n';
+    html += '┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐\n';
+    html += '│   STEP 7     │◀───│   STEP 6     │◀───│   STEP 5     │◀───│              │\n';
+    html += '│ Generate Output│ Perform Analytics Execute Searches│              │\n';
+    html += '└──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘\n';
+    html += '</pre>';
+    html += '</div>';
+
     const steps = [
         {n:1,t:'LOAD & VALIDATE DATA',d:'Load the CSV dataset and validate its structure.',i:['Read CSV file containing YouTube posts and comments','Validate required columns: id, url, content, author_id, parent_id','Check for data integrity issues','Filter out invalid or malformed entries','Statistics: Total rows, valid comments, orphaned comments']},
         {n:2,t:'DISCOVER VIDEOS',d:'Identify which posts are videos vs comments.',i:['Parse URLs to extract video IDs','Group comments by parent video using parent_id relationships','Handle orphaned comments (comments without identifiable videos)','Build Video objects with associated Comment objects','Optional: Step 2.5 attempts to reassign orphaned comments using semantic similarity']},
@@ -314,8 +543,8 @@ function renderAlgorithmSteps() {
         {n:7,t:'GENERATE OUTPUT',d:'Save results and generate visualization.',i:['Create timestamped output directory','Save results.json with complete analysis data','Save metadata.json with run statistics','Save session.pkl for future reuse/categorization','Generate HTML visualization (this page)','Display summary statistics and next steps']}
     ];
 
-    const container = document.getElementById('algorithm-steps');
-    let html = '';
+    html += '<div class="steps-section">';
+    html += '<h3>DETAILED STEPS</h3>';
 
     steps.forEach(step => {
         html += '<div class="step-box">';
@@ -326,6 +555,8 @@ function renderAlgorithmSteps() {
         });
         html += '</ul></div></div>';
     });
+
+    html += '</div>'; // Close steps-section
 
     container.innerHTML = html;
 }
@@ -340,6 +571,19 @@ function toggleStep(header) {
     } else {
         content.classList.add('active');
         toggle.textContent = '-';
+    }
+}
+
+function toggleVideo(videoId) {
+    const content = document.getElementById(videoId);
+    const toggle = document.getElementById(videoId + '-toggle');
+
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.textContent = '-';
+    } else {
+        content.style.display = 'none';
+        toggle.textContent = '+';
     }
 }
 

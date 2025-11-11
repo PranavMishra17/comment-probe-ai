@@ -7,10 +7,17 @@ Provides interactive visualization and search for analysis results.
 import logging
 import json
 import os
+import pickle
 from flask import Flask, request, jsonify, render_template, send_from_directory
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from src.utils.logger import setup_logging
+from src.core.models import CommentSearchSpec
+from src.ai.openai_client import OpenAIClient
+from src.ai.embedder import Embedder
+from src.ai.search_engine import SearchEngine
+from src.utils.cache_manager import CacheManager
+from src.utils.rate_limiter import RateLimiter
 from config import Config
 
 # Initialize Flask app
@@ -27,6 +34,30 @@ try:
 except Exception as e:
     logger.error(f"[App] Configuration validation failed: {e}")
     raise
+
+# Initialize AI components for search (lazy loading)
+_search_engine: Optional[SearchEngine] = None
+
+
+def get_search_engine() -> SearchEngine:
+    """
+    Gets or initializes the search engine (singleton pattern).
+
+    Returns:
+        SearchEngine instance
+    """
+    global _search_engine
+
+    if _search_engine is None:
+        logger.info("[App] Initializing search engine")
+        cache_manager = CacheManager(Config.CACHE_DIR)
+        rate_limiter = RateLimiter(Config.REQUESTS_PER_MINUTE, Config.TOKENS_PER_MINUTE)
+        openai_client = OpenAIClient(Config.OPENAI_API_KEY, rate_limiter)
+        embedder = Embedder(openai_client, cache_manager)
+        _search_engine = SearchEngine(openai_client, embedder)
+        logger.info("[App] Search engine initialized")
+
+    return _search_engine
 
 
 @app.route('/', methods=['GET'])
@@ -82,11 +113,15 @@ def list_runs():
                     except:
                         pass
 
+                # Try multiple possible field names for video count
+                video_count = metadata.get('videos_processed', metadata.get('videos_analyzed', 0))
+                comment_count = metadata.get('total_comments', 0)
+
                 runs.append({
                     'run_id': run_id,
                     'timestamp': metadata.get('timestamp', ''),
-                    'videos': metadata.get('videos_analyzed', 0),
-                    'comments': metadata.get('total_comments', 0)
+                    'videos': video_count,
+                    'comments': comment_count
                 })
 
         runs.sort(key=lambda x: x['run_id'], reverse=True)  # Most recent first
@@ -128,13 +163,14 @@ def get_results(run_id):
 @app.route('/api/search', methods=['POST'])
 def search_comments():
     """
-    Searches comments across videos in a run.
+    Searches comments across videos in a run using semantic search.
 
     Request Body:
         {
             "run_id": "run identifier",
             "query": "search query",
-            "video_ids": ["optional", "list", "of", "video", "ids"]
+            "video_ids": ["optional", "list", "of", "video", "ids"],
+            "top_k": 20  // optional, default 20
         }
 
     Returns:
@@ -143,62 +179,73 @@ def search_comments():
     try:
         data = request.get_json()
         run_id = data.get('run_id')
-        query = data.get('query', '').lower()
+        query = data.get('query', '')
         video_ids_filter = data.get('video_ids', [])
+        top_k = data.get('top_k', 20)
 
         if not run_id or not query:
             return jsonify({"error": "run_id and query are required"}), 400
 
-        results_path = os.path.join(Config.OUTPUT_BASE_DIR, f"run-{run_id}", Config.RESULTS_FILENAME)
+        # Load session (which has videos with embeddings)
+        session_path = os.path.join(Config.OUTPUT_BASE_DIR, f"run-{run_id}", "session.pkl")
 
-        if not os.path.exists(results_path):
-            return jsonify({"error": f"Results not found for run {run_id}"}), 404
+        if not os.path.exists(session_path):
+            return jsonify({"error": f"Session not found for run {run_id}"}), 404
 
-        with open(results_path, 'r', encoding='utf-8') as f:
-            results = json.load(f)
+        with open(session_path, 'rb') as f:
+            session = pickle.load(f)
 
-        # Search through videos
-        matches = []
-        for video in results.get('videos', []):
-            video_id = video.get('video_id', '')
+        videos = session.get('videos', [])
 
+        if not videos:
+            return jsonify({"error": "No videos found in session"}), 404
+
+        # Initialize search engine
+        search_engine = get_search_engine()
+
+        # Create search spec
+        spec = CommentSearchSpec(
+            query=query,
+            context="web_ui_search",
+            filters={},
+            extract_fields=["sentiment", "topics"],
+            rationale="User-initiated web UI search",
+            is_static=False,
+            top_k=top_k
+        )
+
+        # Search across videos
+        all_matches = []
+
+        for video in videos:
             # Filter by video_ids if specified
-            if video_ids_filter and video_id not in video_ids_filter:
+            if video_ids_filter and video.id not in video_ids_filter:
                 continue
 
-            # Search in topics
-            for topic in video.get('analytics', {}).get('topics', []):
-                if query in topic.get('topic_name', '').lower():
-                    for comment in topic.get('representative_comments', []):
-                        if query in comment.get('content', '').lower():
-                            matches.append({
-                                'video_id': video_id,
-                                'video_url': video.get('url', ''),
-                                'comment': comment.get('content', ''),
-                                'match_type': 'topic',
-                                'topic_name': topic.get('topic_name', ''),
-                                'relevance': comment.get('relevance_score', 0)
-                            })
+            # Execute semantic search
+            result = search_engine.execute_search(video, spec)
 
-            # Search in questions
-            for question in video.get('analytics', {}).get('questions', []):
-                if query in question.get('question_text', '').lower():
-                    matches.append({
-                        'video_id': video_id,
-                        'video_url': video.get('url', ''),
-                        'comment': question.get('question_text', ''),
-                        'match_type': 'question',
-                        'category': question.get('category', ''),
-                        'relevance': question.get('relevance_score', 0)
-                    })
+            # Convert results to JSON format
+            for comment, score in zip(result.matched_comments, result.relevance_scores):
+                all_matches.append({
+                    'video_id': video.id,
+                    'video_url': video.url,
+                    'comment': comment.content,
+                    'comment_url': comment.url,
+                    'author_id': comment.author_id,
+                    'match_type': 'semantic_search',
+                    'relevance': float(score),
+                    'insights': result.extracted_insights
+                })
 
         # Sort by relevance
-        matches.sort(key=lambda x: x.get('relevance', 0), reverse=True)
+        all_matches.sort(key=lambda x: x.get('relevance', 0), reverse=True)
 
         return jsonify({
             'query': query,
-            'total_matches': len(matches),
-            'matches': matches[:100]  # Limit to 100 results
+            'total_matches': len(all_matches),
+            'matches': all_matches[:100],  # Limit to 100 results
+            'search_type': 'semantic'
         })
 
     except Exception as e:
