@@ -101,7 +101,11 @@ jobs:
       run: |
         echo "Checking step scripts..."
         for i in {1..7}; do
-          test -f "step${i}"*.py && echo "✓ step${i} exists" || echo "✗ step${i} missing"
+          if ls step${i}*.py 1> /dev/null 2>&1; then
+            echo "✓ step${i} exists"
+          else
+            echo "✗ step${i} missing"
+          fi
         done
 
     - name: Test code style (optional)
